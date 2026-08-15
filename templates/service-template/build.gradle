@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+    }
+}
+
+dependencies {
+    implementation project(':starters:platform-starter-web')
+    implementation project(':starters:platform-starter-security')
+    implementation project(':starters:platform-starter-data-jpa')
+    implementation project(':starters:platform-starter-observability')
+    // __OPTIONAL_STARTERS__
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+}

@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1.7
+ARG SERVICE=sample-service
+
+FROM eclipse-temurin:21-jdk-jammy AS builder
+ARG SERVICE
+WORKDIR /workspace
+COPY gradle gradle
+COPY gradlew settings.gradle build.gradle gradle.properties ./
+COPY starters starters
+COPY services services
+RUN chmod +x gradlew \
+    && ./gradlew ":services:${SERVICE}:bootJar" --no-daemon \
+    && find "services/${SERVICE}/build/libs" -maxdepth 1 -name '*.jar' ! -name '*-plain.jar' -exec cp '{}' /tmp/application.jar \;
+
+FROM eclipse-temurin:21-jre-jammy
+RUN groupadd --system app && useradd --system --gid app --home-dir /app app
+WORKDIR /app
+COPY --from=builder --chown=app:app /tmp/application.jar /app/application.jar
+USER app
+EXPOSE 8080
+ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-Dfile.encoding=UTF-8", "-jar", "/app/application.jar"]

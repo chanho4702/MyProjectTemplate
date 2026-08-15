@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/msa-platform-template/template-config.schema.json",
+  "title": "MSA Platform Template configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["project", "runtime", "capacity", "features", "environments"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "basePackage"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]{2,39}$" },
+        "basePackage": { "type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["java", "springBoot", "deploymentTarget"],
+      "properties": {
+        "java": { "const": 21 },
+        "springBoot": { "type": "string" },
+        "deploymentTarget": { "enum": ["vm", "kubernetes", "managed-container"] }
+      }
+    },
+    "capacity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetTps", "availabilityTarget", "peakConcurrency"],
+      "properties": {
+        "targetTps": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "availabilityTarget": { "enum": ["99", "99.9", "99.95", "99.99"] },
+        "peakConcurrency": { "type": "integer", "minimum": 1, "maximum": 10000000 }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["database", "readWriteSplit", "redis", "kafka", "elasticsearch", "oidc", "observability"],
+      "properties": {
+        "database": { "const": "postgresql" },
+        "readWriteSplit": { "type": "boolean" },
+        "redis": { "type": "boolean" },
+        "kafka": { "type": "boolean" },
+        "elasticsearch": { "type": "boolean" },
+        "oidc": { "type": "boolean" },
+        "observability": { "type": "boolean" }
+      }
+    },
+    "environments": {
+      "type": "array",
+      "items": { "enum": ["local", "dev", "prod"] },
+      "uniqueItems": true,
+      "minItems": 1
+    }
+  }
+}

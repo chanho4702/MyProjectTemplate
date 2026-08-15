@@ -1,0 +1,24 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'msa-platform-template'
+
+def includeChildren = { String parent ->
+    def directory = file(parent)
+    if (!directory.exists()) {
+        return
+    }
+    directory.eachDir { child ->
+        if (new File(child, 'build.gradle').exists()) {
+            include(":${parent}:${child.name}")
+            project(":${parent}:${child.name}").projectDir = child
+        }
+    }
+}
+
+includeChildren('starters')
+includeChildren('services')

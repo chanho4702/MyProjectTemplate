@@ -1,0 +1,10 @@
+.git
+.gradle
+.idea
+.vscode
+**/build
+**/node_modules
+tools/configurator
+load-tests/results
+generated
+*.log

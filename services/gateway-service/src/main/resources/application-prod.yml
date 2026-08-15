@@ -1,0 +1,15 @@
+platform:
+  gateway:
+    security-enabled: true
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI}
+  cloud:
+    gateway:
+      server:
+        webflux:
+          trusted-proxies: ${TRUSTED_PROXY_REGEX}

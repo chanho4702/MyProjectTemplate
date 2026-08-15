@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - run: ./gradlew test --no-daemon
+
+  configurator:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/configurator
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: tools/configurator/package-lock.json
+      - run: npm ci
+      - run: npm audit --omit=dev
+      - run: npm test
+
+  compose-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: >-
+          docker compose
+          --env-file infra/.env.versions
+          -f infra/compose.yml
+          --profile database-ha
+          --profile cache
+          --profile messaging
+          --profile search
+          --profile identity
+          config --quiet

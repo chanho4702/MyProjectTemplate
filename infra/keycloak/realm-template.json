@@ -1,0 +1,21 @@
+{
+  "realm": "template",
+  "enabled": true,
+  "displayName": "Local Template Identity",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "local-test-client",
+      "name": "Local load-test client",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "local-test-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "publicClient": false,
+      "protocol": "openid-connect"
+    }
+  ]
+}

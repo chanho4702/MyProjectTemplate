@@ -1,0 +1,40 @@
+platform:
+  security:
+    enabled: true
+  datasource:
+    writer:
+      url: ${DB_WRITER_URL}
+      username: ${DB_USERNAME}
+      password: ${DB_PASSWORD}
+    reader:
+      url: ${DB_READER_URL:}
+      username: ${DB_READER_USERNAME:${DB_USERNAME}}
+      password: ${DB_READER_PASSWORD:${DB_PASSWORD}}
+
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      ssl:
+        enabled: ${REDIS_SSL:true}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      properties:
+        enable.idempotence: true
+        acks: all
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+    username: ${ELASTICSEARCH_USERNAME:}
+    password: ${ELASTICSEARCH_PASSWORD:}
+
+management:
+  endpoint:
+    health:
+      show-details: never

@@ -1,0 +1,29 @@
+platform:
+  security:
+    enabled: false
+  datasource:
+    writer:
+      url: ${DB_WRITER_URL:jdbc:postgresql://localhost:5432/appdb}
+      username: ${DB_USERNAME:app}
+      password: ${DB_PASSWORD:app-local-password}
+    reader:
+      url: ${DB_READER_URL:}
+      username: ${DB_READER_USERNAME:${DB_USERNAME:app}}
+      password: ${DB_READER_PASSWORD:${DB_PASSWORD:app-local-password}}
+
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  elasticsearch:
+    uris: ${ELASTICSEARCH_URIS:http://localhost:9200}
+
+management:
+  health:
+    redis:
+      enabled: ${REDIS_ENABLED:false}
+    elasticsearch:
+      enabled: ${SEARCH_ENABLED:false}
