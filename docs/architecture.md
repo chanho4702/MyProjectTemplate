@@ -8,7 +8,8 @@
 
 ```mermaid
 flowchart LR
-    C[Client] --> E[Edge / Load Balancer]
+    C[Client] --> WEB[React SPA]
+    WEB --> E[Edge / Load Balancer]
     E --> G[API Gateway]
     G --> S1[Service A]
     G --> S2[Service B]
@@ -23,6 +24,8 @@ flowchart LR
     S1 --> OT[OTel collector]
     S2 --> OT
 ```
+
+로컬 `apps/web`은 같은 origin의 `/api`를 호출하고 Vite proxy가 Gateway로 전달한다. dev/prod에서는 런타임 `app-config.json`과 ingress/LB가 같은 경계를 유지한다. 브라우저는 내부 sample-service 주소를 직접 알지 않는다. 자세한 결정은 [ADR 0002](adr/0002-frontend-runtime-boundary.md)를 따른다.
 
 서비스는 다른 서비스의 DB를 읽지 않는다. 동기 호출은 명확한 API 계약으로, 비동기 통합은 Kafka 이벤트로 연결한다. Redis는 캐시와 짧은 수명의 조정 데이터에 사용하며 영속 이벤트 원장으로 간주하지 않는다.
 

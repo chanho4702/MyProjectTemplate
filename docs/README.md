@@ -13,19 +13,23 @@
 ## 처음 보는 사람의 권장 순서
 
 1. [처음부터 따라 하는 로컬 실행 가이드](quickstart.md)
-2. [권장 아키텍처와 용량 등급](architecture.md)
-3. [환경 전략](environments.md)
-4. [처리량과 가용성 단계별 가이드](capacity-testing.md)
-5. [검증 기록과 아직 보장하지 않는 범위](verification.md)
+2. [서비스 프론트엔드 실행 가이드](frontend.md)
+3. [권장 아키텍처와 용량 등급](architecture.md)
+4. [환경 전략](environments.md)
+5. [처리량과 가용성 단계별 가이드](capacity-testing.md)
+6. [검증 기록과 아직 보장하지 않는 범위](verification.md)
 
 ## 전체 문서 지도
 
 - [처음부터 따라 하는 로컬 실행 가이드](quickstart.md)
+- [서비스 프론트엔드 실행 가이드](frontend.md)
 - [권장 아키텍처와 용량 등급](architecture.md)
 - [환경 전략](environments.md)
 - [모듈 카탈로그](module-catalog.md)
 - [처리량과 가용성 단계별 가이드](capacity-testing.md)
 - [컨테이너 빌드](container-build.md)
+- [Architecture Decision Records](adr/README.md)
+- [버전과 업그레이드 정책](version-policy.md)
 - [로드맵](roadmap.md)
 - [검증 기록](verification.md)
 

@@ -175,3 +175,29 @@ heap 사용량은 10분 구간에서 증가했지만, JVM이 확보한 메모리
 - C1 또는 C2 등급 충족
 
 로컬 원본 결과는 `load-tests/results/`에 생성되며 Git에는 포함하지 않는다. 재현 절차는 [처리량과 가용성 단계별 가이드](capacity-testing.md)를 따른다.
+
+## 2026-08-16 서비스 프론트엔드 기반 검증
+
+이 검증은 `1c52d5593c71a189b0df5c16c664eced808c55d9` 위에 프론트 변경을 적용한 작업 트리에서 실행했다. 성능 기준선이 아니라 빌드와 연결 계약 검증이다.
+
+| 대상 | 결과 | 확인 내용 |
+|---|---|---|
+| pnpm frozen install | 통과 | Node workspace의 lockfile 재현 |
+| 공통 API client | 통과 | TypeScript, GET/POST, Problem Detail, validation, request ID 4개 테스트 |
+| React SPA | 통과 | TypeScript, runtime config, 로딩·목록·오류 화면 7개 테스트 |
+| production build | 통과 | Vite 8.2.1, JS 약 201.76 kB / gzip 63.95 kB, CSS 약 13.53 kB / gzip 4.00 kB |
+| 구성 마법사 | 통과 | `none/spa/ssr` 선택을 포함한 production build와 server render |
+| 실제 local 연결 | 통과 | Vite `:5173` → proxy → Gateway `:8082` → sample-service `:8081` → PostgreSQL GET/POST/재조회 |
+| 의존성 취약점 | 통과 | pnpm production audit와 구성기 npm production audit에서 알려진 취약점 0건 |
+
+로컬 `8080`은 다른 Docker/WSL process가 사용 중이라 Gateway를 `8082`로 실행하고 `GATEWAY_PROXY_TARGET`으로 Vite proxy를 맞췄다. 통합 확인 중 `frontend-qa-20260816` 항목 1건을 로컬 DB에 생성했다.
+
+연결 가능한 인앱/외부 브라우저가 없어 자동 스크린샷 기반 시각 QA는 실행하지 못했다. 반응형 breakpoint, keyboard focus, `prefers-reduced-motion`과 상태별 컴포넌트는 코드와 단위 테스트로 확인했지만 실제 브라우저의 데스크톱·모바일 픽셀 검토는 후속 확인이 필요하다.
+
+아직 검증하지 않은 범위:
+
+- OIDC 로그인·token 갱신·로그아웃
+- OpenAPI 생성 client와 백엔드 schema drift 검출
+- 실제 브라우저 E2E
+- 독립 프론트 컨테이너와 운영 ingress
+- SSR adapter

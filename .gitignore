@@ -5,6 +5,8 @@
 **/out/
 **/node_modules/
 **/.next/
+**/dist/
+**/coverage/
 **/.wrangler/
 **/.devserver.*
 .env

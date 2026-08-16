@@ -2,6 +2,8 @@
 
 `template-config.json`을 만드는 로컬 구성 마법사다. 선택값은 저장소 루트의 JSON schema와 일치하며 `tools/apply-config.ps1`, `tools/new-service.ps1`이 그대로 소비한다.
 
+프론트 선택은 `none`, `spa`, `ssr` 중 하나다. `spa`는 현재 `apps/web` React SPA를 사용하며, `ssr`은 실제 SEO/서버 렌더 요구가 있을 때 후속 adapter가 필요하다는 경고를 함께 내보낸다. 이전 설정처럼 `frontend`가 없으면 적용 도구는 `none`으로 처리한다.
+
 ```bash
 npm install
 npm run dev

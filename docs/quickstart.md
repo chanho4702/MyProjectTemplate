@@ -5,7 +5,9 @@
 ## 이 가이드에서 실행하는 것
 
 ```text
-브라우저 또는 명령어
+브라우저 :5173 또는 명령어
+        ↓
+React SPA / Vite proxy (선택)
         ↓
 Gateway :8080 또는 :8082
         ↓
@@ -58,7 +60,8 @@ java -version
 
 - JDK 21
 - Docker Engine과 Docker Compose v2
-- Node.js 22 이상: 구성 마법사를 사용할 때만 필요
+- Node.js 22 이상: 서비스 프론트 또는 구성 마법사를 사용할 때 필요
+- pnpm 11.10.0: 서비스 프론트 workspace를 사용할 때 필요
 
 Java가 21이 아니라면 현재 터미널에서만 JDK 21을 사용하도록 설정한다.
 
@@ -86,6 +89,7 @@ docker info
 |---|---:|
 | PostgreSQL writer | 5432 |
 | PostgreSQL reader | 5434 |
+| React SPA 개발 서버 | 5173 |
 | Gateway | 8080 |
 | sample-service | 8081 |
 | 두 번째 sample-service — capacity 실험 전용 | 8083 |
@@ -97,7 +101,7 @@ Windows에서 사용 중인 포트를 확인한다.
 
 ```powershell
 Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
-  Where-Object LocalPort -In 5432,5434,8080,8081,8083,8084,9090,3001 |
+  Where-Object LocalPort -In 5173,5432,5434,8080,8081,8083,8084,9090,3001 |
   Select-Object LocalAddress,LocalPort,OwningProcess
 ```
 
@@ -230,7 +234,28 @@ $env:SERVER_PORT='8082'
 
 이때 확인 주소도 `http://localhost:8082/api/v1/items`로 바뀐다. Prometheus 기본 설정은 Gateway `8080`을 수집하므로, 장기적으로 `8082`를 사용할 경우 `infra/observability/prometheus.yml`의 Gateway 포트도 함께 맞춰야 한다.
 
-## 7단계 — Prometheus와 Grafana 실행
+## 7단계 — 서비스 프론트엔드 실행
+
+Gateway API 확인까지 성공한 뒤 **터미널 D**에서 실행한다.
+
+```powershell
+cd D:\MyProjectTemplate
+pnpm install --frozen-lockfile
+pnpm web:dev
+```
+
+브라우저에서 <http://localhost:5173>을 연다. 화면에 저장된 항목 목록이 보이고 새 항목 생성이 성공하면 브라우저→Gateway→sample-service→DB 흐름이 정상이다.
+
+Gateway를 `8082`에서 실행했다면 같은 터미널에서 proxy 대상을 먼저 바꾼다.
+
+```powershell
+$env:GATEWAY_PROXY_TARGET='http://localhost:8082'
+pnpm web:dev
+```
+
+환경별 `app-config.json`, 정상 화면과 문제 해결은 [서비스 프론트엔드 단계별 가이드](frontend.md)를 따른다.
+
+## 8단계 — Prometheus와 Grafana 실행
 
 ```powershell
 docker compose --env-file infra/.env.versions -f infra/compose.yml `
@@ -247,7 +272,7 @@ docker compose --env-file infra/.env.versions -f infra/compose.yml `
 
 Prometheus target 화면에서 실행 중인 서비스는 `UP`이어야 한다. 실행하지 않은 Gateway나 포트가 충돌한 Gateway가 `DOWN`인 것은 정상적인 원인 설명이 필요하며, 부하 결과에 해당 사실을 기록한다.
 
-## 8단계 — 자동 테스트 실행
+## 9단계 — 자동 테스트 실행
 
 루트 검증:
 
@@ -279,9 +304,15 @@ npm test
 cd ..
 ```
 
+프론트 전체 검증:
+
+```powershell
+pnpm frontend:check
+```
+
 실제 부하 테스트는 [처리량과 가용성 단계별 가이드](capacity-testing.md)를 따른다.
 
-## 9단계 — 구성 마법사 사용하기
+## 10단계 — 구성 마법사 사용하기
 
 구성 마법사는 처음 실행에 필수는 아니다. 템플릿에 포함할 기능을 고를 때 사용한다.
 
@@ -302,7 +333,7 @@ cd ../..
 
 생성 결과는 `generated/`에서 확인한다.
 
-## 10단계 — 안전하게 종료하기
+## 11단계 — 안전하게 종료하기
 
 Spring Boot를 실행한 터미널에서 `Ctrl+C`를 누른다. 그다음 Docker 컨테이너를 중지한다.
 
@@ -325,6 +356,8 @@ docker compose --env-file infra/.env.versions -f infra/compose.yml `
 | sample-service가 DB에 연결하지 못함 | Compose `ps`, 5432 포트 | PostgreSQL이 `healthy`인지 확인 |
 | reader 연결 오류 | reader `healthy`, `DB_READER_URL` | reader를 사용하지 않으면 환경변수를 제거하고 writer fallback으로 재실행 |
 | Gateway `8080` 기동 실패 | 8080 포트 | `SERVER_PORT=8082`처럼 빈 포트 사용 |
+| 프론트가 API에 연결하지 못함 | Gateway health와 Vite proxy 대상 | Gateway가 `8082`면 `GATEWAY_PROXY_TARGET`도 `8082`로 설정 |
+| 프론트 설정 오류 | `apps/web/public/app-config.json` | JSON 문법과 local/dev/prod URL 안전 규칙 확인 |
 | Prometheus target `DOWN` | 대상 서비스와 포트 | 서비스를 실행하거나 scrape 포트를 실제 실행 포트와 일치시킴 |
 | 이전 데이터가 계속 보임 | Docker volume | 정상적인 volume 보존 동작이며, 정말 필요할 때만 `down -v`로 초기화 |
 

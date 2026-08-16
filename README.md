@@ -10,7 +10,7 @@
 
 `MyProjectTemplate`은 여러 기술을 한꺼번에 켜 놓은 예제 프로젝트가 아니다. PostgreSQL R/W 분리, Redis, Kafka, Elasticsearch, OIDC, 관측성을 독립 모듈로 제공하고 프로젝트마다 필요한 것만 선택하게 만든 플랫폼 starter kit이다.
 
-현재 v0.1은 **백엔드 플랫폼 기반, 구성 마법사, 로컬 인프라와 검증 하네스**를 제공한다. 실제 서비스용 React 프론트엔드는 다음 단계이며, 아직 구현된 기능처럼 표시하지 않는다.
+현재 v0.1은 **백엔드 플랫폼 기반, React SPA 연결 화면, 구성 마법사, 로컬 인프라와 검증 하네스**를 제공한다. OIDC 로그인, OpenAPI client 자동 생성과 운영 배포는 다음 단계이며 아직 구현된 기능처럼 표시하지 않는다.
 
 ## 왜 만들었나
 
@@ -37,6 +37,8 @@
 - Compose profile 기반 PostgreSQL replica, Redis, Kafka, Elasticsearch, Keycloak
 - 목표 TPS·동시성·가용성·기능을 선택하는 웹 구성 마법사
 - 서비스 생성기, 공통 Dockerfile, GitHub Actions CI, k6 시나리오
+- React 19 + Vite + TypeScript 서비스 프론트와 pnpm workspace
+- 런타임 `app-config.json`, Gateway proxy와 Problem Detail API client
 
 ## 아키텍처 한눈에 보기
 
@@ -69,7 +71,8 @@ flowchart LR
 
 - JDK 21
 - Docker Engine과 Docker Compose v2
-- Node.js 22 이상: 구성 마법사를 실행할 때만 필요
+- Node.js 22 이상: 서비스 프론트 또는 구성 마법사를 실행할 때 필요
+- pnpm 11.10.0: 서비스 프론트 workspace를 실행할 때 필요
 - PowerShell 7 또는 Bash
 
 ### 1. 저장소와 PostgreSQL 실행
@@ -104,6 +107,15 @@ curl http://localhost:8081/api/v1/items
 curl http://localhost:8080/api/v1/items
 ```
 
+### 4. 서비스 프론트엔드 실행
+
+```powershell
+pnpm install --frozen-lockfile
+pnpm web:dev
+```
+
+브라우저에서 <http://localhost:5173>을 연다. 자세한 준비, 정상 결과와 문제 해결은 [서비스 프론트엔드 가이드](docs/frontend.md)를 따른다.
+
 ## 옵션 구성 마법사
 
 처음부터 모든 인프라를 실행할 필요가 없다. 구성 화면에서 목표 TPS, 동시성, 가용성, 배포 대상과 기능을 선택하면 다음 결과를 얻는다.
@@ -133,6 +145,9 @@ npm run dev
     "targetTps": 300,
     "availabilityTarget": "99.9",
     "peakConcurrency": 500
+  },
+  "frontend": {
+    "mode": "spa"
   },
   "features": {
     "database": "postgresql",
@@ -285,6 +300,8 @@ Redis failover, Kafka broker 장애·재처리, Elasticsearch 대량 색인, Kub
 
 ```text
 MyProjectTemplate/
+├─ apps/web/                 # React 19 + Vite 서비스 프론트
+├─ packages/api-client/      # Gateway API와 Problem Detail 공통 client
 ├─ services/                 # 독립 실행·배포되는 Gateway와 백엔드 서비스
 ├─ starters/                 # 재사용 가능한 Spring Boot platform starter
 ├─ infra/                    # profile 기반 로컬 인프라
@@ -297,7 +314,7 @@ MyProjectTemplate/
 └─ .github/                  # CI, Dependabot, PR 문서 동기화 체크
 ```
 
-하나의 Git 저장소를 사용하지만 서비스별 빌드, Docker 이미지, 데이터 소유권과 배포 경계는 독립적으로 유지한다. 프론트엔드가 추가되면 `apps/web`과 `packages/`를 같은 모노레포에 포함한다.
+하나의 Git 저장소를 사용하지만 서비스별 빌드, Docker 이미지, 데이터 소유권과 배포 경계는 독립적으로 유지한다. 프론트 SPA는 `apps/web`, 공유 가능한 브라우저 계약은 `packages/`에서 관리한다.
 
 ## 새 서비스 만들기
 
@@ -318,7 +335,7 @@ MyProjectTemplate/
 - [x] Prometheus/Grafana dashboard와 Markdown 결과 리포트
 - [x] 로컬 reader 중단·재기동 실패율과 복구 기록
 - [x] 로컬 capacity proxy와 앱 인스턴스 제거 실측
-- [ ] React 19 + Vite + TypeScript 서비스 프론트
+- [x] React 19 + Vite + TypeScript 서비스 프론트 기반과 Gateway 연결
 - [ ] OIDC 로그인, Gateway/BFF, OpenAPI client 생성
 - [ ] 깨끗한 커밋 기준 4시간 soak와 실제 C1/C2 기준선
 - [ ] Helm, HPA, PDB, NetworkPolicy, migration/rollback runbook
@@ -330,6 +347,7 @@ MyProjectTemplate/
 
 - [문서 허브와 GitHub–Notion–Obsidian 동기화 규칙](docs/README.md)
 - [빠른 시작](docs/quickstart.md)
+- [서비스 프론트엔드](docs/frontend.md)
 - [권장 아키텍처](docs/architecture.md)
 - [local/dev/prod 환경 전략](docs/environments.md)
 - [모듈 카탈로그](docs/module-catalog.md)
@@ -344,6 +362,6 @@ MyProjectTemplate/
 - 사용하지 않는 인프라 모듈은 의존성과 실행 profile에서 제거한다.
 - 특정 TPS, 가용성, 무손실 이벤트 처리를 근거 없이 보장하지 않는다.
 - 로컬 Compose의 비밀번호와 보안 비활성화 값을 운영에 복사하지 않는다.
-- Kubernetes와 실제 서비스용 프론트엔드는 아직 제공 범위가 아니다.
+- Kubernetes 운영 배포, OIDC 로그인과 OpenAPI client 자동 생성은 아직 제공 범위가 아니다.
 
 변경 전에는 루트 [`AGENTS.md`](AGENTS.md)의 경계 규칙을 확인하고, PR에서 코드·테스트·문서를 함께 갱신한다.

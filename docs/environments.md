@@ -22,6 +22,8 @@
 
 `prod`가 `local`을 include하지 않는다. 운영 값은 이미지에 굽지 않고 런타임 환경과 Secret Manager에서 주입한다.
 
+프론트 SPA는 시작 시 `app-config.json`을 읽는다. 기본 빈 `apiBaseUrl`은 같은 origin의 `/api`를 사용하며, dev/prod에서 외부 Gateway URL이 필요하면 환경별 런타임 파일로 주입한다. prod 설정은 localhost, 평문 HTTP와 URL 내부 자격증명을 허용하지 않는다. 자세한 경계는 [ADR 0002](adr/0002-frontend-runtime-boundary.md)를 따른다.
+
 ## 운영 배포 권고
 
 ```mermaid

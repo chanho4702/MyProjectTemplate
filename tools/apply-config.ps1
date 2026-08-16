@@ -17,6 +17,15 @@ if ([int]$config.capacity.targetTps -lt 1) {
     throw 'capacity.targetTps must be positive.'
 }
 
+$frontendMode = if ($null -eq $config.frontend -or [string]::IsNullOrWhiteSpace($config.frontend.mode)) {
+    'none'
+} else {
+    [string]$config.frontend.mode
+}
+if ($frontendMode -notin @('none', 'spa', 'ssr')) {
+    throw 'frontend.mode must be one of: none, spa, ssr.'
+}
+
 $profiles = @()
 if ($config.features.readWriteSplit) { $profiles += 'database-ha' }
 if ($config.features.redis) { $profiles += 'cache' }
@@ -32,6 +41,7 @@ New-Item -ItemType Directory -Force -Path $generatedRoot | Out-Null
 
 $environmentLines = @(
     "PROJECT_NAME=$($config.project.name)",
+    "FRONTEND_MODE=$frontendMode",
     "REDIS_ENABLED=$($config.features.redis.ToString().ToLowerInvariant())",
     "KAFKA_ENABLED=$($config.features.kafka.ToString().ToLowerInvariant())",
     "SEARCH_ENABLED=$($config.features.elasticsearch.ToString().ToLowerInvariant())"
@@ -48,6 +58,7 @@ $summary = @"
 - Base package: $($config.project.basePackage)
 - Target: $($config.capacity.targetTps) TPS / $($config.capacity.availabilityTarget)%
 - Deployment: $($config.runtime.deploymentTarget)
+- Frontend: $frontendMode
 - Compose profiles: $profileSummary
 
 ## Local command
