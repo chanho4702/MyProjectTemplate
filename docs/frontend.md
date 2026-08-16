@@ -1,12 +1,13 @@
 # 서비스 프론트엔드 처음부터 실행하기
 
-이 문서는 React를 처음 접하는 사람도 `apps/web` 화면을 실행하고 Gateway 연결을 확인하도록 단계별로 설명한다. 현재 제공 범위는 **sample API 조회·생성, 로딩·빈 화면·오류 안내와 런타임 환경 설정**이다. OIDC 로그인, OpenAPI 자동 생성과 E2E는 후속 작업이다.
+이 문서는 React를 처음 접하는 사람도 `apps/web` 화면을 실행하고 Gateway 연결을 확인하도록 단계별로 설명한다. 현재 제공 범위는 **sample API 조회·생성, 로딩·빈 화면·오류·권한 안내, 선택형 OIDC와 OpenAPI 생성 타입**이다. 인증을 실제로 켜는 명령은 [OIDC 인증 가이드](authentication.md), API 변경 절차는 [OpenAPI 계약 가이드](api-contracts.md)를 따른다.
 
 ## 1. 무엇이 실행되나
 
 ```mermaid
 flowchart LR
     B[Browser :5173] -->|/api| V[Vite local proxy]
+    B -. auth.enabled=true .-> K[Keycloak :8180]
     V --> G[Gateway :8080]
     G --> S[sample-service :8081]
     S --> W[(PostgreSQL writer :5432)]
@@ -22,6 +23,7 @@ flowchart LR
 - PostgreSQL writer
 - sample-service `:8081`
 - Gateway `:8080`
+- Keycloak `:8180` — OIDC를 켤 때만 필요
 
 PowerShell에서 확인한다.
 
@@ -111,6 +113,8 @@ pnpm web:dev
 4. 새 항목 이름을 입력하고 `writer DB에 저장`을 누른다.
 5. 생성한 항목이 목록 첫 줄에 보인다.
 
+기본 `auth.enabled=false`에서는 로그인 버튼이 보이지 않는다. 인증 예제 설정을 사용하면 로그인 전 API 요청을 보내지 않고 `로그인 필요` 상태를 보여준다.
+
 ## 6. 화면 상태의 뜻
 
 | 화면 | 의미 | 다음 확인 |
@@ -130,7 +134,10 @@ pnpm web:dev
 ```json
 {
   "environment": "local",
-  "apiBaseUrl": ""
+  "apiBaseUrl": "",
+  "auth": {
+    "enabled": false
+  }
 }
 ```
 
@@ -140,7 +147,16 @@ pnpm web:dev
 - dev: `app-config.dev.example.json`처럼 같은 origin ingress를 우선 사용. 별도 Gateway HTTPS URL이면 해당 Gateway의 명시적 CORS 정책 필요
 - prod: 같은 origin ingress 권장. 외부 URL이면 HTTPS 사용
 
-prod 설정은 `localhost`, 평문 HTTP, URL 안의 사용자 이름 또는 비밀번호를 거부한다. client secret, access token과 운영 비밀번호는 이 JSON이나 프론트 번들에 넣지 않는다.
+prod 설정은 API·OIDC URL의 `localhost`, 평문 HTTP, URL 안의 사용자 이름 또는 비밀번호를 거부한다. `clientSecret` 필드도 명시적으로 거부한다. client secret, access token과 운영 비밀번호는 이 JSON이나 프론트 번들에 넣지 않는다.
+
+인증 예제 파일:
+
+- `app-config.local.example.json`: local 인증 꺼짐
+- `app-config.oidc-local.example.json`: local Keycloak 인증 켜짐
+- `app-config.dev.example.json`: dev HTTPS OIDC 예시
+- `app-config.prod.example.json`: prod HTTPS OIDC 예시
+
+각 필드, Keycloak client와 Gateway 실행 방법은 [선택형 OIDC 인증을 처음부터 실행하기](authentication.md)에 있다.
 
 배포에서는 빌드 산출물의 `app-config.json`을 환경별 설정으로 교체하거나 mount한다. 이렇게 하면 같은 불변 프론트 이미지를 dev/prod에서 다시 빌드하지 않고 사용할 수 있다.
 
@@ -170,11 +186,13 @@ pnpm frontend:check
 
 이 명령은 다음을 순서대로 실행한다.
 
-1. 공통 API client TypeScript 검사
-2. API 성공·생성·Problem Detail·request ID 테스트
-3. 웹 TypeScript 검사
-4. 로딩·목록·오류 안내 컴포넌트 테스트
-5. production build
+1. OpenAPI 생성 타입이 기준 명세와 같은지 확인
+2. 공통 API client TypeScript 검사
+3. API 성공·생성·Problem Detail·request ID·Bearer header 테스트
+4. 웹 TypeScript 검사
+5. runtime OIDC 설정, callback, 갱신과 비활성 lazy-load 테스트
+6. 로딩·목록·오류·미로그인 안내 컴포넌트 테스트
+7. production build와 OIDC 별도 chunk 생성
 
 ## 10. 자주 생기는 문제
 
@@ -187,6 +205,9 @@ pnpm frontend:check
 | 설정 오류 화면 | `public/app-config.json` | JSON 문법, environment와 URL 안전 규칙 확인 |
 | POST validation 오류 | 이름 길이와 공백 | 1~120자의 이름 입력 |
 | production에서 localhost 거부 | prod `apiBaseUrl` | 같은 origin 또는 실제 HTTPS Gateway 사용 |
+| 화면에 `로그인 필요` | 인증이 켜졌지만 미로그인 | 상단 로그인 버튼 사용 |
+| 로그인 뒤 redirect 오류 | Keycloak callback 불일치 | `localhost:5173/oidc/callback` exact 등록 |
+| 로그인 뒤에도 401 | Gateway issuer 불일치 | runtime authority와 Gateway issuer를 같은 realm으로 맞춤 |
 
 Gateway 기본 포트 `8080`이 충돌해 `8082`로 실행했다면 프론트 터미널에서 다음처럼 로컬 proxy 대상만 바꾼다.
 
@@ -209,11 +230,9 @@ docker compose --env-file infra/.env.versions -f infra/compose.yml down
 
 ## 아직 구현하지 않은 것
 
-- OIDC 로그인·갱신·로그아웃
-- Gateway/BFF token 처리 결정
-- OpenAPI에서 TypeScript client 자동 생성
-- 브라우저 E2E와 백엔드 계약 검증
+- HTTP-only cookie를 사용하는 BFF adapter와 그에 필요한 CSRF 방어
+- 실제 브라우저 자동 E2E
 - 프론트 독립 컨테이너와 운영 ingress 예제
 - SSR adapter
 
-이 항목은 구현과 테스트가 추가된 뒤에만 완료로 표시한다.
+OIDC redirect의 실제 브라우저·Keycloak·Gateway smoke는 환경별로 수행해야 하며, 단위 테스트 통과만으로 운영 인증이 완성됐다고 보지 않는다.

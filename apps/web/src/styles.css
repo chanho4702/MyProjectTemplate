@@ -106,6 +106,7 @@ input:focus-visible {
 
 .brand small,
 .environment-badge,
+.auth-control,
 .kicker,
 .hero-contract,
 .path-node span,
@@ -150,6 +151,83 @@ footer a {
 .environment-badge > span.is-failed {
   background: var(--danger);
   box-shadow: 0 0 0 4px rgba(211, 75, 90, 0.12);
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.auth-control {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  padding: 3px 4px 3px 10px;
+  color: var(--ink-soft);
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid #9baaf3;
+  border-radius: 999px;
+  font-size: 9px;
+}
+
+.auth-control > span {
+  color: var(--signal-dark);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+}
+
+.auth-control strong {
+  max-width: 150px;
+  color: var(--ink);
+  font-size: 9px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-control button {
+  min-height: 26px;
+  padding: 0 9px;
+  color: white;
+  background: var(--signal);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.auth-control button:hover {
+  background: var(--signal-dark);
+}
+
+.auth-control.is-authenticated {
+  border-color: #8bcabb;
+}
+
+.auth-control.is-authenticated > span {
+  color: #147765;
+}
+
+.auth-control.is-authenticated button {
+  color: #31534c;
+  background: #dff2ed;
+}
+
+.auth-control.is-error {
+  border-color: #e5a1aa;
+}
+
+.auth-control.is-error > span,
+.auth-control.is-error strong {
+  color: #982d3b;
+}
+
+.auth-control.is-error button {
+  background: var(--danger);
 }
 
 .hero {
@@ -458,7 +536,8 @@ footer a {
 }
 
 .empty-state,
-.loading-state {
+.loading-state,
+.auth-required {
   display: grid;
   place-items: center;
   align-content: center;
@@ -478,13 +557,35 @@ footer a {
   font-size: 24px;
 }
 
+.auth-required > span {
+  display: grid;
+  place-items: center;
+  min-width: 46px;
+  height: 28px;
+  padding: 0 8px;
+  color: var(--signal-dark);
+  background: #e8ecff;
+  border: 1px solid #aebaf2;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .empty-state h3 {
   margin: 16px 0 8px;
   font-size: 16px;
 }
 
+.auth-required h3 {
+  margin: 16px 0 8px;
+  font-size: 16px;
+}
+
 .empty-state p,
-.loading-state p {
+.loading-state p,
+.auth-required p {
   max-width: 430px;
   margin: 0;
   color: var(--ink-soft);
@@ -778,10 +879,25 @@ footer a {
 
   .site-header {
     min-height: 74px;
+    gap: 10px;
   }
 
   .brand strong {
     font-size: 13px;
+  }
+
+  .brand small,
+  .auth-control strong {
+    display: none;
+  }
+
+  .header-status {
+    gap: 5px;
+  }
+
+  .auth-control {
+    gap: 5px;
+    padding-left: 7px;
   }
 
   .hero {

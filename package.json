@@ -7,9 +7,11 @@
   },
   "packageManager": "pnpm@11.10.0",
   "scripts": {
+    "api:generate": "pnpm --filter @myprojecttemplate/api-client generate",
+    "api:check": "pnpm --filter @myprojecttemplate/api-client check:generated",
     "web:dev": "pnpm --filter @myprojecttemplate/web dev",
     "web:build": "pnpm --filter @myprojecttemplate/web build",
     "web:test": "pnpm --filter @myprojecttemplate/web test",
-    "frontend:check": "pnpm --filter @myprojecttemplate/api-client typecheck && pnpm --filter @myprojecttemplate/api-client test && pnpm --filter @myprojecttemplate/web typecheck && pnpm --filter @myprojecttemplate/web test && pnpm --filter @myprojecttemplate/web build"
+    "frontend:check": "pnpm api:check && pnpm --filter @myprojecttemplate/api-client typecheck && pnpm --filter @myprojecttemplate/api-client test && pnpm --filter @myprojecttemplate/web typecheck && pnpm --filter @myprojecttemplate/web test && pnpm --filter @myprojecttemplate/web build"
   }
 }

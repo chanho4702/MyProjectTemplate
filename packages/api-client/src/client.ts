@@ -1,12 +1,8 @@
-export interface Item {
-  id: string;
-  name: string;
-  createdAt: string;
-}
-export interface ValidationViolation {
-  field: string;
-  message: string;
-}
+import type { components } from "./generated/sample-service";
+
+export type Item = components["schemas"]["Item"];
+export type ValidationViolation = components["schemas"]["ValidationViolation"];
+type CreateItemRequest = components["schemas"]["CreateItemRequest"];
 
 interface ProblemDetail {
   title?: unknown;
@@ -47,6 +43,7 @@ export interface ApiClientOptions {
   baseUrl?: string;
   fetchImpl?: typeof fetch;
   requestIdFactory?: () => string;
+  accessTokenProvider?: () => string | undefined | Promise<string | undefined>;
 }
 
 const ITEM_PATH = "/api/v1/items";
@@ -108,29 +105,47 @@ function defaultRequestIdFactory(): string {
   return globalThis.crypto.randomUUID();
 }
 
+async function withAccessToken(
+  headers: Record<string, string>,
+  accessTokenProvider: ApiClientOptions["accessTokenProvider"],
+): Promise<Record<string, string>> {
+  if (!accessTokenProvider) return headers;
+
+  const accessToken = await accessTokenProvider();
+  return accessToken ? { ...headers, Authorization: `Bearer ${accessToken}` } : headers;
+}
+
 export function createApiClient(options: ApiClientOptions = {}): ApiClient {
   const baseUrl = options.baseUrl ?? "";
   const fetchImpl = options.fetchImpl ?? globalThis.fetch;
   const requestIdFactory = options.requestIdFactory ?? defaultRequestIdFactory;
+  const accessTokenProvider = options.accessTokenProvider;
 
   return {
     async listItems(requestOptions) {
       const response = await fetchImpl(buildUrl(baseUrl, ITEM_PATH), {
-        headers: { Accept: "application/json", "X-Request-Id": requestIdFactory() },
+        headers: await withAccessToken(
+          { Accept: "application/json", "X-Request-Id": requestIdFactory() },
+          accessTokenProvider,
+        ),
         signal: requestOptions?.signal,
       });
       return expectJson<Item[]>(response);
     },
 
     async createItem(name, requestOptions) {
+      const requestBody: CreateItemRequest = { name };
       const response = await fetchImpl(buildUrl(baseUrl, ITEM_PATH), {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-          "X-Request-Id": requestIdFactory(),
-        },
-        body: JSON.stringify({ name }),
+        headers: await withAccessToken(
+          {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "X-Request-Id": requestIdFactory(),
+          },
+          accessTokenProvider,
+        ),
+        body: JSON.stringify(requestBody),
         signal: requestOptions?.signal,
       });
       return expectJson<Item>(response);

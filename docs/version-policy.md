@@ -9,7 +9,7 @@
 | Java | LTS를 사용하고 Gradle toolchain으로 고정 |
 | Spring Boot / Cloud | 공식 호환 조합을 함께 갱신 |
 | Node.js | Active LTS 또는 Maintenance LTS 범위 |
-| React / Vite | 정확한 버전을 lockfile에 기록 |
+| React / Vite / OIDC / OpenAPI 도구 | 정확한 버전을 lockfile에 기록 |
 | Docker image | `.env.versions`의 정확한 tag, 검증 보고서는 가능하면 digest 기록 |
 | GitHub Actions | major tag를 사용하되 Dependabot과 릴리스 노트를 검토 |
 
@@ -48,6 +48,7 @@ cd .. && pnpm frontend:check
 - local/dev/prod 설정 key가 모두 해석됨
 - Compose profile 구성 검증 통과
 - 프론트 typecheck, 단위 테스트와 production build 통과
+- OpenAPI generated type drift와 OIDC 비활성/갱신/callback 계약 통과
 - 공개 API 또는 생성 설정이 바뀌면 이전 예제와 migration 설명 제공
 - 성능 영향이 예상되면 같은 환경과 데이터로 전후 비교
 

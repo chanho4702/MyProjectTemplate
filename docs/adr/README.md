@@ -23,3 +23,5 @@ ADR은 중요한 기술 결정을 **왜 그렇게 했는지** 코드와 함께 �
 |---|---|---|
 | [0001](0001-modular-platform-boundaries.md) | Accepted | 기능별 starter와 adapter 경계를 유지한다 |
 | [0002](0002-frontend-runtime-boundary.md) | Accepted | 서비스 프론트는 Gateway와 런타임 설정을 경계로 사용한다 |
+| [0003](0003-spa-oidc-public-client.md) | Accepted | 선택형 SPA 인증은 공개 OIDC client와 Authorization Code + PKCE를 사용한다 |
+| [0004](0004-openapi-generated-client-contract.md) | Accepted | OpenAPI 기준 명세에서 프론트 타입을 생성하고 drift를 차단한다 |

@@ -39,8 +39,8 @@
 - [x] `apps/web` React 19 + Vite + TypeScript 기반
 - [x] pnpm workspace와 프론트 공통 `packages/`
 - [x] local/dev/prod API endpoint와 Gateway 연동
-- [ ] 선택형 OIDC 로그인·갱신·로그아웃
-- [ ] OpenAPI 기반 API client 생성과 계약 검증
+- [x] 선택형 OIDC 로그인·갱신·로그아웃
+- [x] OpenAPI 기반 API client 생성과 계약 검증
 - [ ] 공통 오류·로딩·권한 처리와 E2E 테스트
 - [x] 구성 마법사의 `프론트 없음 / SPA / SSR` 선택
 

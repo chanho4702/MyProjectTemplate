@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 
 import { createApiClient } from "@myprojecttemplate/api-client";
 import { App } from "./App";
+import { createAuthClient } from "./auth-client";
 import { loadRuntimeConfig } from "./runtime-config";
 import "./styles.css";
 
@@ -15,11 +16,15 @@ const root = createRoot(rootElement);
 async function bootstrap() {
   try {
     const runtimeConfig = await loadRuntimeConfig();
-    const apiClient = createApiClient({ baseUrl: runtimeConfig.apiBaseUrl });
+    const authClient = await createAuthClient(runtimeConfig.auth);
+    const apiClient = createApiClient({
+      baseUrl: runtimeConfig.apiBaseUrl,
+      accessTokenProvider: runtimeConfig.auth.enabled ? () => authClient.getAccessToken() : undefined,
+    });
 
     root.render(
       <StrictMode>
-        <App apiClient={apiClient} runtimeConfig={runtimeConfig} />
+        <App apiClient={apiClient} authClient={authClient} runtimeConfig={runtimeConfig} />
       </StrictMode>,
     );
   } catch (error) {

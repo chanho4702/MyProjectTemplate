@@ -10,7 +10,7 @@
 
 `MyProjectTemplate`은 여러 기술을 한꺼번에 켜 놓은 예제 프로젝트가 아니다. PostgreSQL R/W 분리, Redis, Kafka, Elasticsearch, OIDC, 관측성을 독립 모듈로 제공하고 프로젝트마다 필요한 것만 선택하게 만든 플랫폼 starter kit이다.
 
-현재 v0.1은 **백엔드 플랫폼 기반, React SPA 연결 화면, 구성 마법사, 로컬 인프라와 검증 하네스**를 제공한다. OIDC 로그인, OpenAPI client 자동 생성과 운영 배포는 다음 단계이며 아직 구현된 기능처럼 표시하지 않는다.
+현재 v0.1은 **백엔드 플랫폼 기반, React SPA 연결 화면, 선택형 OIDC 로그인, OpenAPI 생성 타입, 구성 마법사, 로컬 인프라와 검증 하네스**를 제공한다. BFF, 실제 브라우저 E2E와 운영 배포는 다음 단계이며 아직 구현된 기능처럼 표시하지 않는다.
 
 ## 왜 만들었나
 
@@ -39,6 +39,8 @@
 - 서비스 생성기, 공통 Dockerfile, GitHub Actions CI, k6 시나리오
 - React 19 + Vite + TypeScript 서비스 프론트와 pnpm workspace
 - 런타임 `app-config.json`, Gateway proxy와 Problem Detail API client
+- 기본 비활성 선택형 SPA OIDC Authorization Code + PKCE와 local Keycloak client
+- OpenAPI 3.1 기준 명세, 생성 TypeScript 타입과 CI drift 검사
 
 ## 아키텍처 한눈에 보기
 
@@ -336,7 +338,9 @@ MyProjectTemplate/
 - [x] 로컬 reader 중단·재기동 실패율과 복구 기록
 - [x] 로컬 capacity proxy와 앱 인스턴스 제거 실측
 - [x] React 19 + Vite + TypeScript 서비스 프론트 기반과 Gateway 연결
-- [ ] OIDC 로그인, Gateway/BFF, OpenAPI client 생성
+- [x] 선택형 OIDC 로그인·갱신·로그아웃과 Gateway Bearer token 연결
+- [x] OpenAPI 기반 TypeScript 타입 생성과 계약 drift 검사
+- [ ] BFF adapter와 실제 브라우저 인증 E2E
 - [ ] 깨끗한 커밋 기준 4시간 soak와 실제 C1/C2 기준선
 - [ ] Helm, HPA, PDB, NetworkPolicy, migration/rollback runbook
 - [ ] outbox/CDC, OpenSearch/Valkey, object storage adapter
@@ -348,6 +352,8 @@ MyProjectTemplate/
 - [문서 허브와 GitHub–Notion–Obsidian 동기화 규칙](docs/README.md)
 - [빠른 시작](docs/quickstart.md)
 - [서비스 프론트엔드](docs/frontend.md)
+- [선택형 OIDC 인증](docs/authentication.md)
+- [OpenAPI 계약과 client 생성](docs/api-contracts.md)
 - [권장 아키텍처](docs/architecture.md)
 - [local/dev/prod 환경 전략](docs/environments.md)
 - [모듈 카탈로그](docs/module-catalog.md)
@@ -362,6 +368,6 @@ MyProjectTemplate/
 - 사용하지 않는 인프라 모듈은 의존성과 실행 profile에서 제거한다.
 - 특정 TPS, 가용성, 무손실 이벤트 처리를 근거 없이 보장하지 않는다.
 - 로컬 Compose의 비밀번호와 보안 비활성화 값을 운영에 복사하지 않는다.
-- Kubernetes 운영 배포, OIDC 로그인과 OpenAPI client 자동 생성은 아직 제공 범위가 아니다.
+- Kubernetes 운영 배포, BFF/CSRF, 운영 IdP lifecycle과 실제 브라우저 E2E는 아직 제공 범위가 아니다.
 
 변경 전에는 루트 [`AGENTS.md`](AGENTS.md)의 경계 규칙을 확인하고, PR에서 코드·테스트·문서를 함께 갱신한다.

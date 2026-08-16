@@ -47,6 +47,27 @@ describe("createApiClient", () => {
     );
   });
 
+  it("adds an OIDC bearer token only when a provider returns one", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify([ITEM]), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    const accessTokenProvider = vi.fn().mockResolvedValue("access-token-0001");
+    const client = createApiClient({ fetchImpl, accessTokenProvider });
+
+    await client.listItems();
+
+    expect(accessTokenProvider).toHaveBeenCalledOnce();
+    expect(fetchImpl).toHaveBeenCalledWith(
+      "/api/v1/items",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "Bearer access-token-0001" }),
+      }),
+    );
+  });
+
   it("maps Problem Detail and validation violations to ApiError", async () => {
     const fetchImpl = vi.fn<typeof fetch>().mockResolvedValue(
       new Response(

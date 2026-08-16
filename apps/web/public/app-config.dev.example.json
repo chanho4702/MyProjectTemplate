@@ -1,4 +1,10 @@
 {
   "environment": "dev",
-  "apiBaseUrl": ""
+  "apiBaseUrl": "",
+  "auth": {
+    "enabled": true,
+    "authority": "https://identity.dev.example.com/realms/template",
+    "clientId": "template-spa",
+    "scope": "openid profile email"
+  }
 }

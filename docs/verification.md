@@ -201,3 +201,29 @@ heap 사용량은 10분 구간에서 증가했지만, JVM이 확보한 메모리
 - 실제 브라우저 E2E
 - 독립 프론트 컨테이너와 운영 ingress
 - SSR adapter
+
+## 2026-08-16 선택형 OIDC와 OpenAPI 계약 검증
+
+이 검증은 `ed75b86f3f1cbe0aef5a5c03eeb6a87696803114` 위 작업 트리에 선택형 인증과 API 계약 변경을 적용해 실행했다. 실제 사용자 트래픽의 보안 인증이나 성능 기준선이 아니라 코드·설정·생성물 계약 검증이다.
+
+| 대상 | 결과 | 확인 내용 |
+|---|---|---|
+| 전체 backend | 통과 | Java 21 `./gradlew test`, sample controller의 GET 200·POST 201·validation 400 계약 포함 |
+| OpenAPI drift | 통과 | OpenAPI 3.1.2 명세에서 `openapi-typescript` 7.13.0 생성, `--check` 일치 |
+| API client | 통과 | TypeScript와 GET/POST·Problem Detail·request ID·Bearer token 5개 테스트 |
+| React SPA | 통과 | runtime config, OIDC 비활성·login/logout callback·silent renew, 미로그인 차단과 기존 화면 총 17개 테스트 |
+| production build | 통과 | main JS 210.14 kB / gzip 66.41 kB, OIDC 별도 chunk 67.50 kB / gzip 17.04 kB, CSS 15.00 kB / gzip 4.30 kB |
+| Keycloak realm | 통과 | Keycloak 26.4.2 임시 fresh import, issuer discovery, 공개 `template-spa`, Standard Flow, S256 PKCE, login/logout exact redirect와 `local-user` 확인 |
+| Compose | 통과 | 기본 구성과 database-ha/cache/messaging/search/identity/observability 전체 profile config |
+| 구성 마법사 | 통과 | production build와 server render 1개 테스트 |
+| 부하 계약 | 통과 | 15개 Node 계약 테스트 |
+| 의존성 취약점 | 통과 | pnpm production audit와 구성기 npm production audit에서 알려진 취약점 0건 |
+
+Keycloak 검증은 기존 Compose DB를 건드리지 않도록 `18180`의 임시 컨테이너에서 수행하고 컨테이너를 제거했다. realm JSON이 fresh import에서 실제 해석된다는 사실을 확인한 것이며, 기존 realm에는 Keycloak의 `IGNORE_EXISTING` 정책 때문에 새 client가 자동 덮어써지지 않는다. 기존 realm 사용자는 [OIDC 인증 가이드](authentication.md)의 Admin Console 확인 절차를 따라야 한다.
+
+연결 가능한 인앱/외부 브라우저가 없어 실제 `local-user` 로그인 클릭, callback 화면과 로그아웃의 브라우저 E2E·스크린샷은 실행하지 못했다. 다음 항목은 후속 환경 검증으로 남는다.
+
+- 실제 브라우저 → Keycloak → SPA callback → Gateway JWT 검증의 end-to-end smoke
+- dev/prod IdP의 HTTPS, exact redirect, MFA와 사용자 lifecycle 정책
+- BFF/HTTP-only cookie와 CSRF adapter
+- 프론트 독립 컨테이너와 운영 ingress/CORS

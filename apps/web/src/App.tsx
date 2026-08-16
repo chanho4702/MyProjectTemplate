@@ -1,15 +1,18 @@
-import { useActionState, useCallback, useEffect, useState } from "react";
+import { useActionState, useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import type { ApiClient, Item } from "@myprojecttemplate/api-client";
 import { ApiError } from "@myprojecttemplate/api-client";
+import type { AuthClient, AuthSnapshot } from "./auth-client";
 import type { RuntimeConfig } from "./runtime-config";
 
 interface AppProps {
   apiClient: ApiClient;
+  authClient: AuthClient;
   runtimeConfig: RuntimeConfig;
 }
 
 type ItemsState =
+  | { status: "blocked"; items: Item[] }
   | { status: "loading"; items: Item[] }
   | { status: "ready"; items: Item[] }
   | { status: "error"; items: Item[]; error: DisplayError };
@@ -44,8 +47,8 @@ function toDisplayError(error: unknown): DisplayError {
   return { message: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다." };
 }
 
-function ConnectionPath({ active, failed }: { active: boolean; failed: boolean }) {
-  const stateLabel = failed ? "확인 필요" : active ? "요청 중" : "대기";
+function ConnectionPath({ active, failed, authRequired }: { active: boolean; failed: boolean; authRequired: boolean }) {
+  const stateLabel = authRequired ? "로그인 필요" : failed ? "확인 필요" : active ? "요청 중" : "대기";
 
   return (
     <section className={`service-path ${active ? "is-active" : ""} ${failed ? "has-failure" : ""}`} aria-label="API 요청 경로">
@@ -67,6 +70,52 @@ function ConnectionPath({ active, failed }: { active: boolean; failed: boolean }
         <span className="path-pulse" aria-hidden="true" />
       </div>
     </section>
+  );
+}
+
+function AuthControl({ authClient, snapshot }: { authClient: AuthClient; snapshot: AuthSnapshot }) {
+  if (snapshot.status === "disabled") return null;
+
+  if (snapshot.status === "authenticated") {
+    return (
+      <div className="auth-control is-authenticated">
+        <span>OIDC</span>
+        <strong>{snapshot.displayName}</strong>
+        <button type="button" onClick={() => void authClient.logout()}>로그아웃</button>
+      </div>
+    );
+  }
+
+  if (snapshot.status === "error") {
+    return (
+      <div className="auth-control is-error" role="alert" aria-label={`인증 오류: ${snapshot.message}`}>
+        <span>AUTH</span>
+        <strong>인증 확인 필요</strong>
+        <button type="button" onClick={() => void authClient.login()}>다시 로그인</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="auth-control">
+      <span>OIDC</span>
+      <strong>로그인 전</strong>
+      <button type="button" onClick={() => void authClient.login()}>로그인</button>
+    </div>
+  );
+}
+
+function AuthRequiredNotice({ snapshot }: { snapshot: AuthSnapshot }) {
+  return (
+    <div className="auth-required" role="status">
+      <span aria-hidden="true">KEY</span>
+      <h3>{snapshot.status === "error" ? "인증 설정을 확인해야 합니다." : "로그인하면 API 연결을 시작합니다."}</h3>
+      <p>
+        {snapshot.status === "error"
+          ? snapshot.message
+          : "상단의 로그인 버튼을 누르면 OIDC 제공자로 이동합니다. 비밀번호는 이 화면이나 저장소에 저장되지 않습니다."}
+      </p>
+    </div>
   );
 }
 
@@ -107,7 +156,7 @@ function ItemList({ items }: { items: Item[] }) {
   );
 }
 
-function CreateItemForm({ apiClient, onCreated }: { apiClient: ApiClient; onCreated: (item: Item) => void }) {
+function CreateItemForm({ apiClient, onCreated, authRequired }: { apiClient: ApiClient; onCreated: (item: Item) => void; authRequired: boolean }) {
   const action = useCallback(
     async (_previous: CreateState, formData: FormData): Promise<CreateState> => {
       const name = String(formData.get("name") ?? "").trim();
@@ -137,9 +186,9 @@ function CreateItemForm({ apiClient, onCreated }: { apiClient: ApiClient; onCrea
         <span>POST</span>
       </div>
       <label htmlFor="item-name">항목 이름</label>
-      <input id="item-name" name="name" maxLength={120} placeholder="예: first-item" autoComplete="off" disabled={isPending} />
-      <button type="submit" disabled={isPending}>
-        <span>{isPending ? "저장 중" : "writer DB에 저장"}</span>
+      <input id="item-name" name="name" maxLength={120} placeholder="예: first-item" autoComplete="off" disabled={isPending || authRequired} />
+      <button type="submit" disabled={isPending || authRequired}>
+        <span>{authRequired ? "로그인 후 사용 가능" : isPending ? "저장 중" : "writer DB에 저장"}</span>
         <strong aria-hidden="true">→</strong>
       </button>
       <p className={`form-message is-${state.kind}`} aria-live="polite">
@@ -151,8 +200,13 @@ function CreateItemForm({ apiClient, onCreated }: { apiClient: ApiClient; onCrea
   );
 }
 
-export function App({ apiClient, runtimeConfig }: AppProps) {
-  const [itemsState, setItemsState] = useState<ItemsState>({ status: "loading", items: [] });
+export function App({ apiClient, authClient, runtimeConfig }: AppProps) {
+  const authSnapshot = useSyncExternalStore(authClient.subscribe, authClient.getSnapshot, authClient.getSnapshot);
+  const canCallApi = authSnapshot.status === "disabled" || authSnapshot.status === "authenticated";
+  const authRequired = !canCallApi;
+  const [itemsState, setItemsState] = useState<ItemsState>(() =>
+    canCallApi ? { status: "loading", items: [] } : { status: "blocked", items: [] },
+  );
 
   const loadItems = useCallback(
     async (signal?: AbortSignal) => {
@@ -169,10 +223,14 @@ export function App({ apiClient, runtimeConfig }: AppProps) {
   );
 
   useEffect(() => {
+    if (!canCallApi) {
+      setItemsState((current) => ({ status: "blocked", items: current.items }));
+      return undefined;
+    }
     const controller = new AbortController();
     void loadItems(controller.signal);
     return () => controller.abort();
-  }, [loadItems]);
+  }, [canCallApi, loadItems]);
 
   const handleCreated = useCallback((item: Item) => {
     setItemsState((current) => ({ status: "ready", items: [item, ...current.items] }));
@@ -188,9 +246,12 @@ export function App({ apiClient, runtimeConfig }: AppProps) {
           <span className="brand-symbol" aria-hidden="true">M</span>
           <span><strong>MyProjectTemplate</strong><small>Service Console</small></span>
         </a>
-        <div className="environment-badge">
-          <span className={hasFailure ? "is-failed" : ""} aria-hidden="true" />
-          {runtimeConfig.environment.toUpperCase()}
+        <div className="header-status">
+          <div className="environment-badge">
+            <span className={hasFailure ? "is-failed" : ""} aria-hidden="true" />
+            {runtimeConfig.environment.toUpperCase()}
+          </div>
+          <AuthControl authClient={authClient} snapshot={authSnapshot} />
         </div>
       </header>
 
@@ -211,7 +272,7 @@ export function App({ apiClient, runtimeConfig }: AppProps) {
         </aside>
       </section>
 
-      <ConnectionPath active={isLoading} failed={hasFailure} />
+      <ConnectionPath active={isLoading} failed={hasFailure} authRequired={authRequired} />
 
       <div className="workspace-grid">
         <section className="items-panel" aria-busy={isLoading}>
@@ -228,18 +289,19 @@ export function App({ apiClient, runtimeConfig }: AppProps) {
             </div>
           </div>
 
-          {hasFailure ? <ErrorNotice error={itemsState.error} /> : null}
-          {isLoading && itemsState.items.length === 0 ? (
+          {authRequired ? <AuthRequiredNotice snapshot={authSnapshot} /> : null}
+          {!authRequired && hasFailure ? <ErrorNotice error={itemsState.error} /> : null}
+          {!authRequired && isLoading && itemsState.items.length === 0 ? (
             <div className="loading-state" role="status">
               <span aria-hidden="true" />
               <p>Gateway에서 항목을 불러오고 있습니다.</p>
             </div>
-          ) : (
+          ) : !authRequired ? (
             <ItemList items={itemsState.items} />
-          )}
+          ) : null}
         </section>
 
-        <CreateItemForm apiClient={apiClient} onCreated={handleCreated} />
+        <CreateItemForm apiClient={apiClient} onCreated={handleCreated} authRequired={authRequired} />
       </div>
 
       <section className="recovery-guide">

@@ -1,9 +1,9 @@
 {
-  "environment": "prod",
+  "environment": "local",
   "apiBaseUrl": "",
   "auth": {
     "enabled": true,
-    "authority": "https://identity.example.com/realms/template",
+    "authority": "http://localhost:8180/realms/template",
     "clientId": "template-spa",
     "scope": "openid profile email"
   }

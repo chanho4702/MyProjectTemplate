@@ -7,6 +7,7 @@ describe("parseRuntimeConfig", () => {
     expect(parseRuntimeConfig({ environment: "prod", apiBaseUrl: "" })).toEqual({
       environment: "prod",
       apiBaseUrl: "",
+      auth: { enabled: false },
     });
   });
 
@@ -14,6 +15,7 @@ describe("parseRuntimeConfig", () => {
     expect(parseRuntimeConfig({ environment: "dev", apiBaseUrl: "https://gateway.dev.example.com/" })).toEqual({
       environment: "dev",
       apiBaseUrl: "https://gateway.dev.example.com",
+      auth: { enabled: false },
     });
   });
 
@@ -34,6 +36,52 @@ describe("parseRuntimeConfig", () => {
       /비밀번호/,
     );
   });
+
+  it("accepts and normalizes an enabled OIDC public client", () => {
+    expect(
+      parseRuntimeConfig({
+        environment: "dev",
+        apiBaseUrl: "",
+        auth: {
+          enabled: true,
+          authority: "https://identity.dev.example.com/realms/template/",
+          clientId: "template-spa",
+        },
+      }),
+    ).toEqual({
+      environment: "dev",
+      apiBaseUrl: "",
+      auth: {
+        enabled: true,
+        authority: "https://identity.dev.example.com/realms/template",
+        clientId: "template-spa",
+        scope: "openid profile email",
+        callbackPath: "/oidc/callback",
+        logoutCallbackPath: "/oidc/logout-callback",
+        postLogoutPath: "/",
+      },
+    });
+  });
+
+  it("rejects an insecure OIDC authority in prod", () => {
+    expect(() =>
+      parseRuntimeConfig({
+        environment: "prod",
+        apiBaseUrl: "",
+        auth: { enabled: true, authority: "http://identity.example.com/realms/template", clientId: "template-spa" },
+      }),
+    ).toThrow(/https/);
+  });
+
+  it("rejects a client secret even when authentication is disabled", () => {
+    expect(() =>
+      parseRuntimeConfig({
+        environment: "local",
+        apiBaseUrl: "",
+        auth: { enabled: false, clientSecret: "never-store-this" },
+      }),
+    ).toThrow(/client secret/);
+  });
 });
 
 describe("loadRuntimeConfig", () => {
@@ -45,7 +93,11 @@ describe("loadRuntimeConfig", () => {
       }),
     );
 
-    await expect(loadRuntimeConfig(fetchImpl)).resolves.toEqual({ environment: "local", apiBaseUrl: "" });
+    await expect(loadRuntimeConfig(fetchImpl)).resolves.toEqual({
+      environment: "local",
+      apiBaseUrl: "",
+      auth: { enabled: false },
+    });
     expect(fetchImpl).toHaveBeenCalledWith(
       "/app-config.json",
       expect.objectContaining({ cache: "no-store" }),

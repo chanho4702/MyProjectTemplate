@@ -255,6 +255,8 @@ pnpm web:dev
 
 환경별 `app-config.json`, 정상 화면과 문제 해결은 [서비스 프론트엔드 단계별 가이드](frontend.md)를 따른다.
 
+기본 local 실행은 인증이 꺼져 있어 Keycloak이 필요 없다. 로그인·token 갱신·로그아웃까지 확인하려면 프론트 연결 확인을 마친 뒤 [선택형 OIDC 인증 가이드](authentication.md)의 별도 절차를 따른다. API schema를 바꿀 때는 [OpenAPI 계약 가이드](api-contracts.md)에 따라 명세 → backend → 생성 타입 순서로 변경한다.
+
 ## 8단계 — Prometheus와 Grafana 실행
 
 ```powershell
