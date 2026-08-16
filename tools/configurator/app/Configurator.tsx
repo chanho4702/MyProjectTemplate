@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 type DeploymentTarget = "vm" | "kubernetes" | "managed-container";
 type Availability = "99" | "99.9" | "99.95" | "99.99";
 type EnvironmentName = "local" | "dev" | "prod";
+type FrontendMode = "none" | "spa" | "ssr";
 type BooleanFeature = "redis" | "kafka" | "elasticsearch" | "oidc" | "observability";
 
 interface TemplateConfig {
@@ -23,6 +24,9 @@ interface TemplateConfig {
     availabilityTarget: Availability;
     peakConcurrency: number;
   };
+  frontend: {
+    mode: FrontendMode;
+  };
   features: {
     database: "postgresql";
     readWriteSplit: boolean;
@@ -40,6 +44,7 @@ const INITIAL_CONFIG: TemplateConfig = {
   project: { name: "acme-platform", basePackage: "com.acme.platform" },
   runtime: { java: 21, springBoot: "3.5.16", deploymentTarget: "kubernetes" },
   capacity: { targetTps: 300, availabilityTarget: "99.9", peakConcurrency: 500 },
+  frontend: { mode: "spa" },
   features: {
     database: "postgresql",
     readWriteSplit: true,
@@ -71,6 +76,12 @@ const ENVIRONMENTS: Array<{ key: EnvironmentName; title: string; note: string }>
   { key: "prod", title: "Prod", note: "불변 이미지와 외부 Secret" },
 ];
 
+const FRONTEND_MODES: Array<{ key: FrontendMode; title: string; note: string }> = [
+  { key: "none", title: "프론트 없음", note: "API와 Gateway만 구성" },
+  { key: "spa", title: "React SPA", note: "현재 제공되는 apps/web" },
+  { key: "ssr", title: "SSR", note: "SEO 요구가 있을 때 후속 adapter" },
+];
+
 function deriveRecommendation(config: TemplateConfig) {
   const tps = config.capacity.targetTps;
   const strictAvailability = ["99.95", "99.99"].includes(config.capacity.availabilityTarget);
@@ -82,6 +93,7 @@ function deriveRecommendation(config: TemplateConfig) {
     config.features.kafka ? "messaging" : null,
     config.features.elasticsearch ? "search" : null,
     config.features.oidc ? "identity" : null,
+    config.features.observability ? "observability" : null,
   ].filter((profile): profile is string => Boolean(profile));
   const profileArgs = profiles.map((profile) => `--profile ${profile}`).join(" ");
   const composeCommand = `docker compose --env-file infra/.env.versions -f infra/compose.yml ${profileArgs} up -d`.replace(/\s+/g, " ");
@@ -92,6 +104,7 @@ function deriveRecommendation(config: TemplateConfig) {
   if (config.features.readWriteSplit) warnings.push("reader는 eventual consistency입니다. 쓰기 직후 최신 조회와 금액·재고 판정은 writer를 사용하세요.");
   if (!config.features.observability) warnings.push("관측성을 끄면 처리 한계와 장애 원인을 인증할 수 없습니다. 운영계에서는 켜는 것을 권장합니다.");
   if (config.runtime.deploymentTarget === "vm" && strictAvailability) warnings.push("높은 가용성 목표에서 VM 배포를 선택하면 LB, 장애 감지, 자동 복구를 별도로 구현해야 합니다.");
+  if (config.frontend.mode === "ssr") warnings.push("SSR adapter는 아직 생성되지 않습니다. 실제 SEO와 서버 렌더 요구를 확인한 뒤 별도 구현하세요.");
 
   return {
     replicas,
@@ -288,7 +301,25 @@ export function Configurator() {
           </fieldset>
 
           <fieldset className="control-section">
-            <legend><span>04</span> 배포와 환경</legend>
+            <legend><span>04</span> 서비스 프론트엔드</legend>
+            <div className="frontend-options">
+              {FRONTEND_MODES.map((mode) => (
+                <label className={config.frontend.mode === mode.key ? "is-selected" : ""} key={mode.key}>
+                  <input
+                    type="radio"
+                    name="frontend"
+                    value={mode.key}
+                    checked={config.frontend.mode === mode.key}
+                    onChange={() => setConfig((current) => ({ ...current, frontend: { mode: mode.key } }))}
+                  />
+                  <span><strong>{mode.title}</strong>{mode.note}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="control-section">
+            <legend><span>05</span> 배포와 환경</legend>
             <div className="deployment-options">
               {([
                 ["vm", "VM / 단일 클러스터"],
@@ -335,6 +366,9 @@ export function Configurator() {
             <div className="topology" aria-label="선택한 아키텍처 구성">
               <div className="topology-rail" aria-hidden />
               <div className="topology-node is-entry"><span>EDGE</span><strong>Gateway</strong></div>
+              {config.frontend.mode !== "none" ? (
+                <div className="topology-node is-web"><span>WEB</span><strong>{config.frontend.mode === "spa" ? "React SPA" : "SSR adapter"}</strong></div>
+              ) : null}
               <div className="topology-node is-service"><span>APP</span><strong>{recommendation.replicas} replicas</strong></div>
               <div className="topology-branches">
                 <div className="topology-node"><span>DATA</span><strong>{recommendation.databaseLabel}</strong></div>
