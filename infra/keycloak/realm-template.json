@@ -16,6 +16,58 @@
       "directAccessGrantsEnabled": false,
       "publicClient": false,
       "protocol": "openid-connect"
+    },
+    {
+      "clientId": "template-spa",
+      "name": "Local service console SPA",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "http://localhost:5173/",
+        "http://localhost:5173/oidc/callback",
+        "http://localhost:5173/oidc/logout-callback",
+        "http://localhost:4173/",
+        "http://localhost:4173/oidc/callback",
+        "http://localhost:4173/oidc/logout-callback"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://localhost:4173"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/oidc/logout-callback##http://localhost:4173/oidc/logout-callback"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "roles",
+        "profile",
+        "basic",
+        "email"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "local-user",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Local",
+      "lastName": "Developer",
+      "email": "local-user@example.test",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "local-user-password",
+          "temporary": false
+        }
+      ]
     }
   ]
 }

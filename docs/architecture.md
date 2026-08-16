@@ -1,10 +1,15 @@
 # 권장 아키텍처
 
+![MyProjectTemplate MSA 아키텍처](assets/myprojecttemplate-architecture-fa7499d.png)
+
+위 그림은 개발자 구성 흐름과 런타임 요청·데이터 흐름을 함께 보여준다. 정확한 경계와 예외 규칙은 아래 다이어그램과 설명을 기준으로 한다.
+
 ## 1. 논리 구조
 
 ```mermaid
 flowchart LR
-    C[Client] --> E[Edge / Load Balancer]
+    C[Client] --> WEB[React SPA]
+    WEB --> E[Edge / Load Balancer]
     E --> G[API Gateway]
     G --> S1[Service A]
     G --> S2[Service B]
@@ -19,6 +24,10 @@ flowchart LR
     S1 --> OT[OTel collector]
     S2 --> OT
 ```
+
+로컬 `apps/web`은 같은 origin의 `/api`를 호출하고 Vite proxy가 Gateway로 전달한다. dev/prod에서는 런타임 `app-config.json`과 ingress/LB가 같은 경계를 유지한다. 브라우저는 내부 sample-service 주소를 직접 알지 않는다. 자세한 결정은 [ADR 0002](adr/0002-frontend-runtime-boundary.md)를 따른다.
+
+`auth.enabled=true`이면 SPA는 외부 OIDC provider와 Authorization Code + PKCE를 수행하고 access token을 Gateway 요청에만 붙인다. 인증이 꺼지면 OIDC module 자체를 불러오지 않는다. Gateway가 JWT를 검증하고, 공개 API 계약과 프론트 타입은 `contracts/openapi`에서 연결한다. 자세한 실행은 [OIDC 인증 가이드](authentication.md), 계약 변경은 [OpenAPI 가이드](api-contracts.md)를 따른다.
 
 서비스는 다른 서비스의 DB를 읽지 않는다. 동기 호출은 명확한 API 계약으로, 비동기 통합은 Kafka 이벤트로 연결한다. Redis는 캐시와 짧은 수명의 조정 데이터에 사용하며 영속 이벤트 원장으로 간주하지 않는다.
 
