@@ -380,17 +380,27 @@ select:focus-visible {
   font-size: 10px !important;
 }
 
+.frontend-options,
 .deployment-options,
 .environment-row {
   display: grid;
   gap: 10px;
 }
 
+.frontend-options,
 .deployment-options {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.frontend-options {
+  margin-bottom: 0;
+}
+
+.deployment-options {
   margin-bottom: 18px;
 }
 
+.frontend-options label,
 .deployment-options label {
   display: block;
   padding: 15px 12px;
@@ -401,22 +411,40 @@ select:focus-visible {
   cursor: pointer;
 }
 
+.frontend-options label.is-selected,
 .deployment-options label.is-selected {
   color: var(--blue);
   background: var(--blue-soft);
   border-color: var(--blue);
 }
 
+.frontend-options input,
 .deployment-options input {
   position: absolute;
   opacity: 0;
   pointer-events: none;
 }
 
+.frontend-options label > span,
 .deployment-options label > span {
   display: block;
   margin: 0;
   font-size: 12px;
+}
+
+.frontend-options label > span {
+  display: grid;
+  gap: 5px;
+}
+
+.frontend-options strong {
+  font-size: 12px;
+}
+
+.frontend-options label > span {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
 }
 
 .environment-row {
@@ -555,6 +583,10 @@ select:focus-visible {
 
 .topology-node.is-service::before {
   background: #7198f4;
+}
+
+.topology-node.is-web::before {
+  background: #c99256;
 }
 
 .topology-node strong {
@@ -737,6 +769,7 @@ select:focus-visible {
   .field-grid,
   .capacity-grid,
   .feature-grid,
+  .frontend-options,
   .deployment-options,
   .environment-row {
     grid-template-columns: 1fr;

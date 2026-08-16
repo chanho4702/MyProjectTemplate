@@ -1,0 +1,20 @@
+{
+  "name": "@myprojecttemplate/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/client.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript ../../contracts/openapi/sample-service.yaml -o src/generated/sample-service.ts --immutable",
+    "check:generated": "openapi-typescript ../../contracts/openapi/sample-service.yaml -o src/generated/sample-service.ts --immutable --check",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  }
+}
