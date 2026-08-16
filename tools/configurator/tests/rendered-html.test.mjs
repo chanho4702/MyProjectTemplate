@@ -23,5 +23,8 @@ test("server-renders the architecture configurator", async () => {
   assert.match(html, /필요한 만큼만/);
   assert.match(html, /권장 시작 구성/);
   assert.match(html, /template-config\.json/);
+  assert.match(html, /React SPA/);
+  assert.match(html, /프론트 없음/);
+  assert.match(html, /--profile observability/);
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });

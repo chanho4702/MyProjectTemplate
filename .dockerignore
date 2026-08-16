@@ -4,6 +4,8 @@
 .vscode
 **/build
 **/node_modules
+**/dist
+**/coverage
 tools/configurator
 load-tests/results
 generated

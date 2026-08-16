@@ -36,6 +36,15 @@
         "peakConcurrency": { "type": "integer", "minimum": 1, "maximum": 10000000 }
       }
     },
+    "frontend": {
+      "type": "object",
+      "additionalProperties": false,
+      "default": { "mode": "none" },
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["none", "spa", "ssr"] }
+      }
+    },
     "features": {
       "type": "object",
       "additionalProperties": false,
