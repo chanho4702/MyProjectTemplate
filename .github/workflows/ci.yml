@@ -37,6 +37,18 @@ jobs:
       - run: npm audit --omit=dev
       - run: npm test
 
+  load-test-contracts:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: load-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm test
+
   compose-contract:
     runs-on: ubuntu-latest
     steps:
@@ -50,4 +62,5 @@ jobs:
           --profile messaging
           --profile search
           --profile identity
+          --profile observability
           config --quiet

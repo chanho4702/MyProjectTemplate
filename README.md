@@ -214,6 +214,7 @@ docker compose --env-file infra/.env.versions -f infra/compose.yml \
 | `messaging` | Kafka KRaft | 이벤트 발행·소비 검증 |
 | `search` | Elasticsearch | 색인·검색 검증 |
 | `identity` | Keycloak | OIDC/JWT 검증 |
+| `observability` | Prometheus + Grafana | 요청·JVM·DB pool 용량 지표 관찰 |
 
 Compose는 로컬 개발용이다. 운영에서 이 구성을 그대로 사용하지 않는다.
 
@@ -247,6 +248,10 @@ k6 run -e BASE_URL=http://localhost:8081 -e TARGET_TPS=100 load-tests/capacity.j
 ```
 
 TPS만 기록하지 않는다. Git SHA, 인스턴스 사양, 데이터 크기, p95/p99, 오류율, DB pool, Kafka lag와 장애 복구 시간을 함께 남긴다.
+
+`knee.js`, `spike.js`, `soak.js`는 Git SHA·환경·인스턴스·데이터셋·결과 JSON 경로를 필수로 받는다. 실행 예제와 외부 대상 안전장치는 [처리량과 가용성 검증](docs/capacity-testing.md)에 있다.
+
+선택형 `observability` Compose profile은 Prometheus와 Grafana dashboard를 제공한다. k6 JSON은 `node load-tests/report.js`로 비보장 범위가 포함된 Markdown 리포트로 변환할 수 있다.
 
 ## 실제 확인한 범위
 

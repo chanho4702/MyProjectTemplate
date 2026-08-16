@@ -26,3 +26,21 @@
 - Kubernetes 다중 AZ 배포, HPA/PDB, backup/restore
 
 성능 수치는 [처리량과 가용성 검증](capacity-testing.md)의 조건을 기록한 실측 결과가 생긴 뒤에만 추가한다.
+
+## 2026-08-16 부하 시나리오와 회귀 검증
+
+| 대상 | 결과 | 확인 내용 |
+|---|---|---|
+| Gradle 전체 프로젝트 | 통과 | JDK 21로 전체 starter와 서비스 테스트 재실행 |
+| 구성 마법사 | 통과 | 프로덕션 빌드와 서버 렌더 테스트 재실행 |
+| Compose | 통과 | 기본 구성과 모든 profile 구성 해석 |
+| knee point 시나리오 | 단위 검증 | 증가 TPS 단계, 회복 단계, VU 상한 계산 |
+| spike 시나리오 | 단위 검증 | baseline→3배 spike→baseline 복구 단계 |
+| soak 시나리오 | 단위 검증 | 명시적 목표 TPS와 기본 4시간 지속 설정 |
+| 실행 안전장치 | 단위 검증 | 비로컬 대상 opt-in, Git SHA·환경·사양·데이터셋·결과 경로 필수화 |
+| 결과 계약 | 단위 검증 | 메타데이터, 입력값과 k6 원본 summary를 JSON에 보존 |
+| 결과 리포트 | 단위 검증 | JSON 검증, 핵심 지표·threshold·비보장 문구 Markdown 출력 |
+| 관측성 profile | 정적 검증 | localhost 전용 Prometheus/Grafana와 구성기 profile 연결 |
+| Grafana dashboard | 단위 검증 | 요청률, 오류율, p95/p99, CPU, JVM heap, DB pool query 계약 |
+
+이 검증은 k6 설정 계산을 확인한 것이며 실제 부하 결과가 아니다. 특정 TPS, 지연 시간 또는 가용성 수치를 추가로 보장하지 않는다.

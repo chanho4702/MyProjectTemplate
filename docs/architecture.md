@@ -1,5 +1,9 @@
 # 권장 아키텍처
 
+![MyProjectTemplate MSA 아키텍처](assets/myprojecttemplate-architecture-fa7499d.png)
+
+위 그림은 개발자 구성 흐름과 런타임 요청·데이터 흐름을 함께 보여준다. 정확한 경계와 예외 규칙은 아래 다이어그램과 설명을 기준으로 한다.
+
 ## 1. 논리 구조
 
 ```mermaid

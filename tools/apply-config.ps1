@@ -23,6 +23,7 @@ if ($config.features.redis) { $profiles += 'cache' }
 if ($config.features.kafka) { $profiles += 'messaging' }
 if ($config.features.elasticsearch) { $profiles += 'search' }
 if ($config.features.oidc) { $profiles += 'identity' }
+if ($config.features.observability) { $profiles += 'observability' }
 
 $profileArguments = ($profiles | ForEach-Object { "--profile $_" }) -join ' '
 $composeCommand = "docker compose --env-file infra/.env.versions -f infra/compose.yml $profileArguments up -d" -replace '\s+', ' '

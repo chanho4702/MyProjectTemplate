@@ -82,6 +82,7 @@ function deriveRecommendation(config: TemplateConfig) {
     config.features.kafka ? "messaging" : null,
     config.features.elasticsearch ? "search" : null,
     config.features.oidc ? "identity" : null,
+    config.features.observability ? "observability" : null,
   ].filter((profile): profile is string => Boolean(profile));
   const profileArgs = profiles.map((profile) => `--profile ${profile}`).join(" ");
   const composeCommand = `docker compose --env-file infra/.env.versions -f infra/compose.yml ${profileArgs} up -d`.replace(/\s+/g, " ");

@@ -49,8 +49,8 @@
 ## Phase 3 — 용량 인증 하네스
 
 - [x] k6 smoke와 constant-arrival target 시나리오
-- [ ] knee point 탐색, spike, soak 시나리오
-- [ ] Prometheus dashboard와 결과 리포트 생성
+- [x] knee point 탐색, spike, soak 시나리오와 결과 JSON 계약
+- [x] Prometheus/Grafana dashboard와 k6 Markdown 결과 리포트 생성
 - [ ] 인스턴스 제거와 reader 장애 시나리오
 - [ ] C1/C2 기준선 실측
 
