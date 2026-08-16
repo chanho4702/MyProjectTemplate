@@ -1,0 +1,10 @@
+{
+  "environment": "local",
+  "apiBaseUrl": "",
+  "auth": {
+    "enabled": true,
+    "authority": "http://localhost:8180/realms/template",
+    "clientId": "template-spa",
+    "scope": "openid profile email"
+  }
+}

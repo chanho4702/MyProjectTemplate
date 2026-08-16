@@ -10,14 +10,30 @@
 
 코드와 정확히 일치해야 하는 설정, 실행법, 아키텍처 계약은 Git의 `docs/`를 기준으로 한다. Notion은 문서 탐색과 협업의 입구로 사용하고, Obsidian은 같은 Git 커밋을 가리키는 읽기용 미러로 유지한다.
 
-## 문서 지도
+## 처음 보는 사람의 권장 순서
 
-- [빠른 시작](quickstart.md)
+1. [처음부터 따라 하는 로컬 실행 가이드](quickstart.md)
+2. [서비스 프론트엔드 실행 가이드](frontend.md)
+3. [선택형 OIDC 인증 가이드](authentication.md)
+4. [OpenAPI 계약 변경 가이드](api-contracts.md)
+5. [권장 아키텍처와 용량 등급](architecture.md)
+6. [환경 전략](environments.md)
+7. [처리량과 가용성 단계별 가이드](capacity-testing.md)
+8. [검증 기록과 아직 보장하지 않는 범위](verification.md)
+
+## 전체 문서 지도
+
+- [처음부터 따라 하는 로컬 실행 가이드](quickstart.md)
+- [서비스 프론트엔드 실행 가이드](frontend.md)
+- [선택형 OIDC 인증 가이드](authentication.md)
+- [OpenAPI 계약과 TypeScript client 가이드](api-contracts.md)
 - [권장 아키텍처와 용량 등급](architecture.md)
 - [환경 전략](environments.md)
 - [모듈 카탈로그](module-catalog.md)
-- [처리량과 가용성 검증](capacity-testing.md)
+- [처리량과 가용성 단계별 가이드](capacity-testing.md)
 - [컨테이너 빌드](container-build.md)
+- [Architecture Decision Records](adr/README.md)
+- [버전과 업그레이드 정책](version-policy.md)
 - [로드맵](roadmap.md)
 - [검증 기록](verification.md)
 
