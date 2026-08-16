@@ -1,0 +1,13 @@
+{
+  "name": "msa-template-load-test-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "report": "node report.js",
+    "test": "node --test tests/*.test.js"
+  }
+}
