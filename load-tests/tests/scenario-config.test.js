@@ -77,6 +77,15 @@ test('thresholds can be overridden without changing scenario construction', () =
     http_req_duration: ['p(95)<450', 'p(99)<900'],
     dropped_iterations: ['count==0'],
   });
+  assert.deepEqual(plan.options.summaryTrendStats, [
+    'avg',
+    'min',
+    'med',
+    'max',
+    'p(90)',
+    'p(95)',
+    'p(99)',
+  ]);
 });
 
 test('non-local targets require explicit opt-in', () => {

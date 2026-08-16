@@ -51,8 +51,9 @@
 - [x] k6 smoke와 constant-arrival target 시나리오
 - [x] knee point 탐색, spike, soak 시나리오와 결과 JSON 계약
 - [x] Prometheus/Grafana dashboard와 k6 Markdown 결과 리포트 생성
-- [ ] 인스턴스 제거와 reader 장애 시나리오
-- [ ] C1/C2 기준선 실측
+- [x] 로컬 reader 중단·재기동 실패율과 복구 기록
+- [x] 로컬 capacity proxy와 다중 앱 인스턴스 제거 시나리오
+- [ ] 깨끗한 커밋 기준 4시간 soak와 C1/C2 기준선 실측
 
 완료 조건: 환경과 Git SHA가 포함된 재현 가능한 처리량 보고서가 생성된다.
 

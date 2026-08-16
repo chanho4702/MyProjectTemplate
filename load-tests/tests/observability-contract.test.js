@@ -55,3 +55,21 @@ test('observability profile is optional, localhost-bound, and selected by genera
   assert.match(gatewayConfig, /percentiles-histogram:\s+http\.server\.requests: true/);
   assert.match(sampleConfig, /percentiles-histogram:\s+http\.server\.requests: true/);
 });
+
+test('capacity HA profile is local-only and retries a second sample-service instance', async () => {
+  const [compose, versions, exampleEnvironment, proxy] = await Promise.all([
+    repositoryFile('infra/compose.yml'),
+    repositoryFile('infra/.env.versions'),
+    repositoryFile('infra/.env.example'),
+    repositoryFile('infra/capacity/nginx.conf'),
+  ]);
+
+  assert.match(compose, /profiles: \[capacity-ha\]/);
+  assert.match(compose, /127\.0\.0\.1:\$\{CAPACITY_PROXY_PORT:-8084\}:8080/);
+  assert.match(versions, /^CAPACITY_PROXY_IMAGE=nginx:\d+\.\d+\.\d+-alpine\d+\.\d+$/m);
+  assert.match(exampleEnvironment, /^CAPACITY_PROXY_PORT=8084$/m);
+  assert.match(proxy, /host\.docker\.internal:8081/);
+  assert.match(proxy, /host\.docker\.internal:8083/);
+  assert.match(proxy, /proxy_next_upstream error timeout http_502 http_503 http_504/);
+  assert.match(proxy, /proxy_next_upstream_tries 2/);
+});

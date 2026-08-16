@@ -1,6 +1,7 @@
 const LOCAL_BASE_URL_PATTERN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?(?:\/|$)/i;
 const RESULT_FILE_PATTERN = /^load-tests\/results\/[a-zA-Z0-9][a-zA-Z0-9._/-]*\.json$/;
 const DURATION_PATTERN = /^\d+(?:\.\d+)?(?:ms|s|m|h)$/;
+const SUMMARY_TREND_STATS = ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'];
 
 function stringValue(value) {
   return value === undefined || value === null ? '' : String(value).trim();
@@ -137,6 +138,7 @@ export function createKneePlan(environment) {
       thresholds: thresholdConfig.values,
     },
     options: {
+      summaryTrendStats: [...SUMMARY_TREND_STATS],
       scenarios: {
         knee_read: {
           executor: 'ramping-arrival-rate',
@@ -179,6 +181,7 @@ export function createSpikePlan(environment) {
       thresholds: thresholdConfig.values,
     },
     options: {
+      summaryTrendStats: [...SUMMARY_TREND_STATS],
       scenarios: {
         spike_read: {
           executor: 'ramping-arrival-rate',
@@ -214,6 +217,7 @@ export function createSoakPlan(environment) {
       thresholds: thresholdConfig.values,
     },
     options: {
+      summaryTrendStats: [...SUMMARY_TREND_STATS],
       scenarios: {
         soak_read: {
           executor: 'constant-arrival-rate',

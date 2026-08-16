@@ -215,6 +215,7 @@ docker compose --env-file infra/.env.versions -f infra/compose.yml \
 | `search` | Elasticsearch | 색인·검색 검증 |
 | `identity` | Keycloak | OIDC/JWT 검증 |
 | `observability` | Prometheus + Grafana | 요청·JVM·DB pool 용량 지표 관찰 |
+| `capacity-ha` | 로컬 Nginx capacity proxy | 두 sample-service 인스턴스 제거 실험 |
 
 Compose는 로컬 개발용이다. 운영에서 이 구성을 그대로 사용하지 않는다.
 
@@ -268,6 +269,16 @@ TPS만 기록하지 않는다. Git SHA, 인스턴스 사양, 데이터 크기, p
 | Gateway→sample-service 실제 프록시 호출 | HTTP 200 |
 | 요청 ID 전달과 응답 헤더 단일화 | 통과 |
 
+2026-08-16에는 단일 로컬 서비스에 실제 k6 탐색 부하를 실행했다.
+
+| 실측 | 결과 | 해석 |
+|---|---|---|
+| 50→150→50 TPS spike, 5분 30초 | 오류 0%, p95 12.28ms, p99 24.07ms, dropped 0 | 1건 데이터의 서비스 직접 조회 조건에서만 유효 |
+| 50 TPS, 10분 soak 사전 점검 | 오류 0.007%, p95 11.66ms, p99 30.02ms, dropped 0 | 연결 timeout 2건, heap 장기 추세는 4시간 시험 필요 |
+| 두 앱 중 한 인스턴스 제거, 50 TPS 90초 | 오류 0%, p95 40.65ms, p99 101.80ms, dropped 0 | 로컬 Nginx가 21건을 남은 인스턴스로 재시도 |
+| reader 약 17초 중단 | 오류 15.879%, p95 약 3.02초, dropped 88 | 실행 중 reader 장애는 writer로 자동 전환되지 않음 |
+| reader 재기동 후 | health `UP`, 조회 성공 | 복구는 확인했으나 무중단은 아님 |
+
 Redis failover, Kafka broker 장애·재처리, Elasticsearch 대량 색인, Kubernetes 다중 AZ는 아직 검증하지 않았다. 전체 근거와 비보장 범위는 [검증 기록](docs/verification.md)에 있다.
 
 ## 저장소 구조
@@ -280,7 +291,7 @@ MyProjectTemplate/
 ├─ tools/configurator/       # 아키텍처 옵션 UI
 ├─ tools/                    # 설정 적용·서비스 생성기
 ├─ templates/                # 신규 서비스 골격
-├─ load-tests/               # k6 smoke와 capacity 시나리오
+├─ load-tests/               # k6 smoke·capacity·knee·spike·soak 시나리오와 결과 리포트
 ├─ config/                   # template-config JSON schema
 ├─ docs/                     # 버전이 고정되는 기술 문서
 └─ .github/                  # CI, Dependabot, PR 문서 동기화 체크
@@ -303,9 +314,13 @@ MyProjectTemplate/
 - [x] PostgreSQL writer/reader와 로컬 인프라
 - [x] 옵션 구성 마법사와 서비스 생성기
 - [x] 기본 k6/CI 검증 기반
+- [x] knee point·spike·soak 시나리오와 결과 JSON 계약
+- [x] Prometheus/Grafana dashboard와 Markdown 결과 리포트
+- [x] 로컬 reader 중단·재기동 실패율과 복구 기록
+- [x] 로컬 capacity proxy와 앱 인스턴스 제거 실측
 - [ ] React 19 + Vite + TypeScript 서비스 프론트
 - [ ] OIDC 로그인, Gateway/BFF, OpenAPI client 생성
-- [ ] spike·soak·자동 failover와 Prometheus 결과 리포트
+- [ ] 깨끗한 커밋 기준 4시간 soak와 실제 C1/C2 기준선
 - [ ] Helm, HPA, PDB, NetworkPolicy, migration/rollback runbook
 - [ ] outbox/CDC, OpenSearch/Valkey, object storage adapter
 

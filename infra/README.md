@@ -11,6 +11,7 @@
 | `search` | Elasticsearch | 색인·검색 검증 |
 | `identity` | Keycloak | 표준 OIDC/JWT 로컬 검증 |
 | `observability` | Prometheus + Grafana | 서비스 지연·오류·JVM·DB pool 관찰 |
+| `capacity-ha` | 로컬 Nginx capacity proxy | `:8081`, `:8083` 두 sample-service의 인스턴스 제거 실험 |
 
 ```bash
 docker compose --env-file .env.versions -f compose.yml --profile database-ha --profile cache up -d
@@ -31,5 +32,13 @@ docker compose --env-file .env.versions -f compose.yml --profile observability u
 - Dashboard: `MyProjectTemplate / MyProjectTemplate Service Capacity`
 
 포트와 기본 계정은 localhost 개발 전용이다. 운영에서는 외부 인증, TLS, 별도 Secret과 장기 보존 정책을 사용한다.
+
+`capacity-ha`는 운영 load balancer가 아니라 장애 실험 전용 로컬 proxy다. sample-service를 `8081`과 `8083`에서 각각 실행한 뒤 `http://localhost:8084`로 요청한다.
+
+```bash
+docker compose --env-file .env.versions -f compose.yml --profile capacity-ha up -d capacity-proxy
+```
+
+Nginx access log에는 선택된 upstream 주소와 상태가 남는다. 인스턴스 하나를 중단했을 때 다른 upstream으로 재시도되는지 확인할 수 있다.
 
 데이터 초기화가 정말 필요한 경우에만 사용자가 명시적으로 named volume을 제거한다. 일반적인 `down`은 볼륨을 보존한다.

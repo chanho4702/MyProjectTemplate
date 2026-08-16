@@ -180,6 +180,22 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  capacity-proxy:
+    profiles: [capacity-ha]
+    image: ${CAPACITY_PROXY_IMAGE}
+    ports:
+      - 127.0.0.1:${CAPACITY_PROXY_PORT:-8084}:8080
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./capacity/nginx.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test: [CMD-SHELL, "wget -qO- http://127.0.0.1:8080/proxy-health | grep -q UP"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   postgres_reader_data:
