@@ -24,6 +24,10 @@ platform:
     security-enabled: ${GATEWAY_SECURITY_ENABLED:false}
 
 management:
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
   endpoints:
     web:
       exposure:

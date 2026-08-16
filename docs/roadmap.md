@@ -6,7 +6,7 @@
 - [x] local/dev/prod 환경 계약
 - [x] 처리량 검증 방법과 초기 용량 등급
 - [x] 구성 JSON schema
-- [ ] ADR과 버전 업그레이드 정책
+- [x] ADR과 버전 업그레이드 정책
 
 완료 조건: 새 사용자가 README에서 선택 기준과 비보장 범위를 이해한다.
 
@@ -36,23 +36,24 @@
 
 ## Phase 2.5 — 서비스 프론트엔드
 
-- [ ] `apps/web` React 19 + Vite + TypeScript 기반
-- [ ] pnpm workspace와 프론트 공통 `packages/`
-- [ ] local/dev/prod API endpoint와 Gateway 연동
-- [ ] 선택형 OIDC 로그인·갱신·로그아웃
-- [ ] OpenAPI 기반 API client 생성과 계약 검증
+- [x] `apps/web` React 19 + Vite + TypeScript 기반
+- [x] pnpm workspace와 프론트 공통 `packages/`
+- [x] local/dev/prod API endpoint와 Gateway 연동
+- [x] 선택형 OIDC 로그인·갱신·로그아웃
+- [x] OpenAPI 기반 API client 생성과 계약 검증
 - [ ] 공통 오류·로딩·권한 처리와 E2E 테스트
-- [ ] 구성 마법사의 `프론트 없음 / SPA / SSR` 선택
+- [x] 구성 마법사의 `프론트 없음 / SPA / SSR` 선택
 
 완료 조건: 프론트와 Gateway API 변경을 같은 PR에서 검증하고, 프론트와 백엔드를 독립 이미지로 배포할 수 있다. SSR은 실제 SEO 요구가 있을 때 별도 adapter로 추가한다.
 
 ## Phase 3 — 용량 인증 하네스
 
 - [x] k6 smoke와 constant-arrival target 시나리오
-- [ ] knee point 탐색, spike, soak 시나리오
-- [ ] Prometheus dashboard와 결과 리포트 생성
-- [ ] 인스턴스 제거와 reader 장애 시나리오
-- [ ] C1/C2 기준선 실측
+- [x] knee point 탐색, spike, soak 시나리오와 결과 JSON 계약
+- [x] Prometheus/Grafana dashboard와 k6 Markdown 결과 리포트 생성
+- [x] 로컬 reader 중단·재기동 실패율과 복구 기록
+- [x] 로컬 capacity proxy와 다중 앱 인스턴스 제거 시나리오
+- [ ] 깨끗한 커밋 기준 4시간 soak와 C1/C2 기준선 실측
 
 완료 조건: 환경과 Git SHA가 포함된 재현 가능한 처리량 보고서가 생성된다.
 

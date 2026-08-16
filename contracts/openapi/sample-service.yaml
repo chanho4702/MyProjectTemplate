@@ -1,0 +1,139 @@
+openapi: 3.1.2
+info:
+  title: MyProjectTemplate sample service API
+  version: 1.0.0
+  description: >-
+    Gateway를 통해 노출되는 sample-service의 기준 계약이다. local에서는 인증을 끌 수 있지만
+    dev/prod 요청은 OIDC access token을 사용한다.
+servers:
+  - url: /
+    description: 같은 origin의 Gateway
+security:
+  - oidcBearer: []
+paths:
+  /api/v1/items:
+    get:
+      operationId: listItems
+      summary: 저장된 항목 조회
+      tags: [items]
+      responses:
+        "200":
+          description: 생성 시각의 내림차순으로 정렬된 항목 목록
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Item"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      operationId: createItem
+      summary: 새 항목 생성
+      description: 쓰기 요청은 항상 writer datasource를 사용한다.
+      tags: [items]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateItemRequest"
+      responses:
+        "201":
+          description: 생성된 항목
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          description: 요청 값 검증 실패
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ValidationProblem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/ServerError"
+components:
+  securitySchemes:
+    oidcBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        SPA가 배포 환경의 OIDC provider에서 Authorization Code + PKCE로 받은 Bearer access
+        token이다. client secret은 브라우저에 보관하지 않는다.
+  responses:
+    Unauthorized:
+      description: access token이 없거나 유효하지 않음
+    ServerError:
+      description: 서버 내부 오류. 배포 경계에 따라 본문이 없을 수 있음
+  schemas:
+    Item:
+      type: object
+      additionalProperties: false
+      required: [id, name, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        createdAt:
+          type: string
+          format: date-time
+    CreateItemRequest:
+      type: object
+      additionalProperties: false
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+    ValidationViolation:
+      type: object
+      additionalProperties: false
+      required: [field, message]
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+    ProblemDetail:
+      type: object
+      additionalProperties: true
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        code:
+          type: string
+        requestId:
+          type: string
+    ValidationProblem:
+      allOf:
+        - $ref: "#/components/schemas/ProblemDetail"
+        - type: object
+          required: [violations]
+          properties:
+            violations:
+              type: array
+              items:
+                $ref: "#/components/schemas/ValidationViolation"

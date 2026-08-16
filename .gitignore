@@ -5,6 +5,8 @@
 **/out/
 **/node_modules/
 **/.next/
+**/dist/
+**/coverage/
 **/.wrangler/
 **/.devserver.*
 .env
@@ -12,5 +14,7 @@
 !.env.example
 !.env.versions
 generated/
+!packages/api-client/src/generated/
+!packages/api-client/src/generated/sample-service.ts
 load-tests/results/
 *.log
