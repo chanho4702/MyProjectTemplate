@@ -1,0 +1,10 @@
+{
+  "environment": "prod",
+  "apiBaseUrl": "",
+  "auth": {
+    "enabled": true,
+    "authority": "https://identity.example.com/realms/template",
+    "clientId": "template-spa",
+    "scope": "openid profile email"
+  }
+}
