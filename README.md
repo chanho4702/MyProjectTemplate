@@ -354,6 +354,7 @@ MyProjectTemplate/
 - [서비스 프론트엔드](docs/frontend.md)
 - [선택형 OIDC 인증](docs/authentication.md)
 - [OpenAPI 계약과 client 생성](docs/api-contracts.md)
+- [의존성 업데이트와 Dependabot 운영](docs/dependency-updates.md)
 - [권장 아키텍처](docs/architecture.md)
 - [local/dev/prod 환경 전략](docs/environments.md)
 - [모듈 카탈로그](docs/module-catalog.md)

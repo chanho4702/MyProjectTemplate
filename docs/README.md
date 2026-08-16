@@ -16,10 +16,11 @@
 2. [서비스 프론트엔드 실행 가이드](frontend.md)
 3. [선택형 OIDC 인증 가이드](authentication.md)
 4. [OpenAPI 계약 변경 가이드](api-contracts.md)
-5. [권장 아키텍처와 용량 등급](architecture.md)
-6. [환경 전략](environments.md)
-7. [처리량과 가용성 단계별 가이드](capacity-testing.md)
-8. [검증 기록과 아직 보장하지 않는 범위](verification.md)
+5. [의존성 업데이트와 Dependabot 운영 가이드](dependency-updates.md)
+6. [권장 아키텍처와 용량 등급](architecture.md)
+7. [환경 전략](environments.md)
+8. [처리량과 가용성 단계별 가이드](capacity-testing.md)
+9. [검증 기록과 아직 보장하지 않는 범위](verification.md)
 
 ## 전체 문서 지도
 
@@ -27,6 +28,7 @@
 - [서비스 프론트엔드 실행 가이드](frontend.md)
 - [선택형 OIDC 인증 가이드](authentication.md)
 - [OpenAPI 계약과 TypeScript client 가이드](api-contracts.md)
+- [의존성 업데이트와 Dependabot 운영 가이드](dependency-updates.md)
 - [권장 아키텍처와 용량 등급](architecture.md)
 - [환경 전략](environments.md)
 - [모듈 카탈로그](module-catalog.md)
