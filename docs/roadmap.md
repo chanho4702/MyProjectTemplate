@@ -41,7 +41,7 @@
 - [x] local/dev/prod API endpoint와 Gateway 연동
 - [x] 선택형 OIDC 로그인·갱신·로그아웃
 - [x] OpenAPI 기반 API client 생성과 계약 검증
-- [ ] 공통 오류·로딩·권한 처리와 E2E 테스트
+- [x] 공통 오류·로딩·권한 처리와 E2E 테스트
 - [x] 구성 마법사의 `프론트 없음 / SPA / SSR` 선택
 
 완료 조건: 프론트와 Gateway API 변경을 같은 PR에서 검증하고, 프론트와 백엔드를 독립 이미지로 배포할 수 있다. SSR은 실제 SEO 요구가 있을 때 별도 adapter로 추가한다.

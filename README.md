@@ -10,7 +10,7 @@
 
 `MyProjectTemplate`은 여러 기술을 한꺼번에 켜 놓은 예제 프로젝트가 아니다. PostgreSQL R/W 분리, Redis, Kafka, Elasticsearch, OIDC, 관측성을 독립 모듈로 제공하고 프로젝트마다 필요한 것만 선택하게 만든 플랫폼 starter kit이다.
 
-현재 v0.1은 **백엔드 플랫폼 기반, React SPA 연결 화면, 선택형 OIDC 로그인, OpenAPI 생성 타입, 구성 마법사, 로컬 인프라와 검증 하네스**를 제공한다. BFF, 실제 브라우저 E2E와 운영 배포는 다음 단계이며 아직 구현된 기능처럼 표시하지 않는다.
+현재 v0.1은 **백엔드 플랫폼 기반, React SPA 연결 화면, 선택형 OIDC 로그인, OpenAPI 생성 타입, 구성 마법사, 로컬 인프라와 검증 하네스**를 제공한다. 프론트는 공통 오류·로딩·권한 화면과 Chromium E2E까지 포함한다. BFF, 실제 IdP를 함께 띄우는 인증 E2E와 운영 배포는 다음 단계이며 아직 구현된 기능처럼 표시하지 않는다.
 
 ## 왜 만들었나
 
@@ -117,6 +117,16 @@ pnpm web:dev
 ```
 
 브라우저에서 <http://localhost:5173>을 연다. 자세한 준비, 정상 결과와 문제 해결은 [서비스 프론트엔드 가이드](docs/frontend.md)를 따른다.
+
+프론트 자동 검증은 백엔드 없이 실행한다.
+
+```powershell
+pnpm frontend:check
+pnpm web:e2e:install
+pnpm web:e2e
+```
+
+`pnpm web:e2e`는 production build를 실제 Chromium에서 열고 Gateway 응답을 stub으로 대체해 로딩·오류·권한·생성 화면을 확인한다.
 
 ## 옵션 구성 마법사
 
@@ -340,7 +350,8 @@ MyProjectTemplate/
 - [x] React 19 + Vite + TypeScript 서비스 프론트 기반과 Gateway 연결
 - [x] 선택형 OIDC 로그인·갱신·로그아웃과 Gateway Bearer token 연결
 - [x] OpenAPI 기반 TypeScript 타입 생성과 계약 drift 검사
-- [ ] BFF adapter와 실제 브라우저 인증 E2E
+- [x] 공통 오류·로딩·권한 처리와 Chromium E2E
+- [ ] BFF adapter와 실제 IdP를 함께 띄우는 인증 E2E
 - [ ] 깨끗한 커밋 기준 4시간 soak와 실제 C1/C2 기준선
 - [ ] Helm, HPA, PDB, NetworkPolicy, migration/rollback runbook
 - [ ] outbox/CDC, OpenSearch/Valkey, object storage adapter

@@ -19,6 +19,10 @@
 ./gradlew test
 docker compose --env-file infra/.env.versions -f infra/compose.yml config
 cd tools/configurator && npm test
+pnpm frontend:check
+pnpm web:e2e
 ```
+
+프론트 E2E는 Chromium이 필요하다. 처음 한 번 `pnpm web:e2e:install`을 실행한다.
 
 커밋과 배포는 사용자가 요청할 때만 수행한다.

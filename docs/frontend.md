@@ -127,6 +127,21 @@ pnpm web:dev
 
 오류에 request ID가 표시되면 Gateway와 sample-service 로그에서 같은 값을 검색해 한 요청의 흐름을 찾는다.
 
+### 오류 안내의 공통 규칙
+
+목록과 생성 폼은 같은 실패 해석기(`src/request-failure.ts`)와 같은 상태 컴포넌트(`src/feedback.tsx`)를 쓴다. 그래서 어느 화면에서 실패하든 같은 상태 코드는 같은 문구와 같은 다음 행동으로 이어진다.
+
+| 응답 | 화면 문구 | 화면이 제안하는 행동 |
+|---|---|---|
+| 연결 실패 | Gateway에 연결하지 못했습니다. | `다시 시도` |
+| 400 / 422 | 입력값을 확인해야 합니다. | violation을 필드 단위로 표시, 버튼 없음 |
+| 401 | 인증이 만료되었거나 유효하지 않습니다. | `다시 로그인` |
+| 403 | 이 작업을 수행할 권한이 없습니다. | 버튼 없음, 권한 요청 안내만 |
+| 404 / 409 / 429 | 상태별 안내 | `다시 시도` |
+| 5xx | 서버가 요청을 처리하지 못했습니다. | `다시 시도`, request ID 표시 |
+
+같은 요청을 반복해도 결과가 달라지지 않는 실패(401, 403, validation)에는 `다시 시도` 버튼을 만들지 않는다.
+
 ## 7. local/dev/prod API 설정
 
 프론트는 시작할 때 `apps/web/public/app-config.json`을 읽는다.
@@ -194,6 +209,38 @@ pnpm frontend:check
 6. 로딩·목록·오류·미로그인 안내 컴포넌트 테스트
 7. production build와 OIDC 별도 chunk 생성
 
+### 브라우저 E2E
+
+`pnpm frontend:check`는 jsdom까지만 확인한다. 실제 Chromium에서 화면 전체를 확인하려면 E2E를 실행한다.
+
+```powershell
+cd D:\MyProjectTemplate
+pnpm web:e2e:install
+pnpm web:e2e
+```
+
+- `pnpm web:e2e:install`은 Chromium을 한 번만 내려받는다.
+- `pnpm web:e2e`는 production build를 만들고 `vite preview`를 띄운 뒤 Playwright로 연다.
+- 백엔드는 필요 없다. `/api/v1/items`와 `/app-config.json` 응답을 브라우저 단계에서 가로채기 때문에 Gateway, sample-service, PostgreSQL 없이 항상 같은 결과가 나온다.
+
+E2E가 검증하는 것:
+
+| 시나리오 | 확인 |
+|---|---|
+| 로딩 | 응답 전 로딩 상태와 `요청 중` 표시 |
+| 빈 목록 | 0건 응답의 안내 문구 |
+| 목록 | 응답 순서와 record 수 |
+| 5xx | 오류 문구, request ID, `다시 시도`로 복구 |
+| 연결 실패 | Gateway 확인 안내 |
+| 403 | 재시도 버튼 없이 권한 안내만 |
+| 생성 성공 | 목록 첫 줄 반영과 전송된 요청 본문 |
+| 생성 validation 오류 | 필드 단위 violation 표시 |
+| 빈 입력 | 요청을 보내지 않고 폼에서 차단 |
+| 인증 켬 | 로그인 전 API 미호출과 OIDC 이동 |
+| 잘못된 설정 | 부팅 오류 화면 |
+
+E2E는 Gateway 응답을 흉내 내므로 Gateway routing, CORS, 실제 OIDC redirect는 검증하지 않는다. 그 부분은 이 문서 3~5절의 수동 절차와 [OIDC 인증 가이드](authentication.md)가 담당한다.
+
 ## 10. 자주 생기는 문제
 
 | 증상 | 확인 | 해결 |
@@ -231,8 +278,8 @@ docker compose --env-file infra/.env.versions -f infra/compose.yml down
 ## 아직 구현하지 않은 것
 
 - HTTP-only cookie를 사용하는 BFF adapter와 그에 필요한 CSRF 방어
-- 실제 브라우저 자동 E2E
+- 실제 Gateway·Keycloak을 함께 띄우는 통합 E2E
 - 프론트 독립 컨테이너와 운영 ingress 예제
 - SSR adapter
 
-OIDC redirect의 실제 브라우저·Keycloak·Gateway smoke는 환경별로 수행해야 하며, 단위 테스트 통과만으로 운영 인증이 완성됐다고 보지 않는다.
+브라우저 E2E는 Gateway 응답을 stub으로 대체한다. OIDC redirect의 실제 브라우저·Keycloak·Gateway smoke는 환경별로 수행해야 하며, 단위 테스트와 E2E 통과만으로 운영 인증이 완성됐다고 보지 않는다.

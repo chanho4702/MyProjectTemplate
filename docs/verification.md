@@ -227,3 +227,29 @@ Keycloak 검증은 기존 Compose DB를 건드리지 않도록 `18180`의 임시
 - dev/prod IdP의 HTTPS, exact redirect, MFA와 사용자 lifecycle 정책
 - BFF/HTTP-only cookie와 CSRF adapter
 - 프론트 독립 컨테이너와 운영 ingress/CORS
+
+## 2026-08-19 공통 상태 처리와 브라우저 E2E 검증
+
+이 검증은 `ad87cd0` 위 작업 트리에서 공통 실패 해석기, 공통 상태 컴포넌트와 Playwright E2E를 적용해 실행했다. 성능 기준선이 아니라 화면 상태 계약 검증이다.
+
+환경: Windows 11, Node.js 24.16.0, pnpm 11.10.0, Playwright 1.62.1, Chromium 151.0.7922.34.
+
+| 대상 | 결과 | 확인 내용 |
+|---|---|---|
+| API client | 통과 | TypeScript와 GET/POST·Problem Detail·request ID·Bearer token 5개 테스트 |
+| 실패 해석 | 통과 | 401/403/404/409/422/429/5xx 분류, violation 전달, fetch TypeError, abort 판별 13개 테스트 |
+| 상태 컴포넌트 | 통과 | 로딩·빈 상태·권한 안내·실패 알림의 role과 행동 버튼 8개 테스트 |
+| React SPA | 통과 | runtime config, OIDC, 재시도 복구, 401 재로그인, violation 표시를 포함한 총 42개 테스트 |
+| 브라우저 E2E | 통과 | Chromium 12개 시나리오: 로딩·빈 목록·목록 순서·5xx 복구·연결 실패·403·생성 성공·validation·빈 입력·인증 켬 미호출·OIDC 이동·설정 실패 |
+| production build | 통과 | main JS 213.91 kB / gzip 67.60 kB, OIDC 별도 chunk 67.50 kB / gzip 17.04 kB, CSS 16.13 kB / gzip 4.52 kB |
+
+E2E는 `vite build` 산출물을 `vite preview`로 띄우고 실제 Chromium에서 연다. `/api/v1/items`와 `/app-config.json` 응답은 브라우저 단계에서 stub으로 대체하므로 Gateway, sample-service, PostgreSQL, Keycloak을 띄우지 않아도 항상 같은 결과가 나온다. 이 방식은 화면 상태 계약을 검증하지만 Gateway routing, CORS, 실제 OIDC redirect는 검증하지 않는다.
+
+`vite preview`의 기본 host가 IPv6 `localhost`로만 바인딩되는 환경이 있어 preview host를 `127.0.0.1`로 고정했다.
+
+아직 검증하지 않은 범위:
+
+- 실제 Gateway·Keycloak을 함께 띄우는 통합 E2E
+- Chromium 외 브라우저와 모바일 viewport
+- 시각 회귀(스크린샷 비교)
+- 프론트 독립 컨테이너와 운영 ingress/CORS
