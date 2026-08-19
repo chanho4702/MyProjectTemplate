@@ -1,8 +1,10 @@
 import { useActionState, useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import type { ApiClient, Item } from "@myprojecttemplate/api-client";
-import { ApiError } from "@myprojecttemplate/api-client";
 import type { AuthClient, AuthSnapshot } from "./auth-client";
+import { AccessNotice, EmptyState, FailureNotice, LoadingState } from "./feedback";
+import type { RequestFailure } from "./request-failure";
+import { isAbortFailure, toRequestFailure } from "./request-failure";
 import type { RuntimeConfig } from "./runtime-config";
 
 interface AppProps {
@@ -15,20 +17,15 @@ type ItemsState =
   | { status: "blocked"; items: Item[] }
   | { status: "loading"; items: Item[] }
   | { status: "ready"; items: Item[] }
-  | { status: "error"; items: Item[]; error: DisplayError };
+  | { status: "error"; items: Item[]; failure: RequestFailure };
 
-interface DisplayError {
-  message: string;
-  requestId?: string;
-}
+type CreateState =
+  | { kind: "idle" }
+  | { kind: "success"; message: string }
+  | { kind: "invalid"; message: string }
+  | { kind: "failed"; failure: RequestFailure };
 
-interface CreateState {
-  kind: "idle" | "success" | "error";
-  message: string;
-  requestId?: string;
-}
-
-const INITIAL_CREATE_STATE: CreateState = { kind: "idle", message: "" };
+const INITIAL_CREATE_STATE: CreateState = { kind: "idle" };
 const CONNECTION_NODES = [
   ["01", "브라우저", "현재 화면"],
   ["02", "Gateway", "/api"],
@@ -36,16 +33,6 @@ const CONNECTION_NODES = [
   ["04", "PostgreSQL", "writer / reader"],
 ] as const;
 const ITEM_DATE_FORMAT = new Intl.DateTimeFormat("ko-KR", { dateStyle: "medium", timeStyle: "short" });
-
-function toDisplayError(error: unknown): DisplayError {
-  if (error instanceof ApiError) {
-    return { message: error.message, requestId: error.requestId };
-  }
-  if (error instanceof TypeError) {
-    return { message: "Gateway에 연결하지 못했습니다. Gateway와 sample-service가 실행 중인지 확인하세요." };
-  }
-  return { message: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다." };
-}
 
 function ConnectionPath({ active, failed, authRequired }: { active: boolean; failed: boolean; authRequired: boolean }) {
   const stateLabel = authRequired ? "로그인 필요" : failed ? "확인 필요" : active ? "요청 중" : "대기";
@@ -105,38 +92,14 @@ function AuthControl({ authClient, snapshot }: { authClient: AuthClient; snapsho
   );
 }
 
-function AuthRequiredNotice({ snapshot }: { snapshot: AuthSnapshot }) {
-  return (
-    <div className="auth-required" role="status">
-      <span aria-hidden="true">KEY</span>
-      <h3>{snapshot.status === "error" ? "인증 설정을 확인해야 합니다." : "로그인하면 API 연결을 시작합니다."}</h3>
-      <p>
-        {snapshot.status === "error"
-          ? snapshot.message
-          : "상단의 로그인 버튼을 누르면 OIDC 제공자로 이동합니다. 비밀번호는 이 화면이나 저장소에 저장되지 않습니다."}
-      </p>
-    </div>
-  );
-}
-
-function ErrorNotice({ error }: { error: DisplayError }) {
-  return (
-    <div className="error-notice" role="alert">
-      <strong>요청을 완료하지 못했습니다.</strong>
-      <p>{error.message}</p>
-      {error.requestId ? <code>request ID · {error.requestId}</code> : null}
-    </div>
-  );
-}
-
 function ItemList({ items }: { items: Item[] }) {
   if (items.length === 0) {
     return (
-      <div className="empty-state">
-        <span aria-hidden="true">＋</span>
-        <h3>아직 저장된 항목이 없습니다.</h3>
-        <p>오른쪽 입력칸에서 첫 항목을 만들면 Gateway와 writer DB 흐름을 확인할 수 있습니다.</p>
-      </div>
+      <EmptyState
+        symbol="＋"
+        title="아직 저장된 항목이 없습니다."
+        description="오른쪽 입력칸에서 첫 항목을 만들면 Gateway와 writer DB 흐름을 확인할 수 있습니다."
+      />
     );
   }
 
@@ -156,25 +119,35 @@ function ItemList({ items }: { items: Item[] }) {
   );
 }
 
-function CreateItemForm({ apiClient, onCreated, authRequired }: { apiClient: ApiClient; onCreated: (item: Item) => void; authRequired: boolean }) {
+function CreateItemForm({
+  apiClient,
+  onCreated,
+  onLogin,
+  authRequired,
+}: {
+  apiClient: ApiClient;
+  onCreated: (item: Item) => void;
+  onLogin: () => void;
+  authRequired: boolean;
+}) {
   const action = useCallback(
     async (_previous: CreateState, formData: FormData): Promise<CreateState> => {
       const name = String(formData.get("name") ?? "").trim();
-      if (!name) return { kind: "error", message: "항목 이름을 입력하세요." };
-      if (name.length > 120) return { kind: "error", message: "항목 이름은 120자 이하여야 합니다." };
+      if (!name) return { kind: "invalid", message: "항목 이름을 입력하세요." };
+      if (name.length > 120) return { kind: "invalid", message: "항목 이름은 120자 이하여야 합니다." };
 
       try {
         const item = await apiClient.createItem(name);
         onCreated(item);
-        return { kind: "success", message: `‘${item.name}’을 writer DB에 저장했습니다.` };
+        return { kind: "success", message: `${item.name} 항목을 writer DB에 저장했습니다.` };
       } catch (error) {
-        const displayError = toDisplayError(error);
-        return { kind: "error", ...displayError };
+        return { kind: "failed", failure: toRequestFailure(error) };
       }
     },
     [apiClient, onCreated],
   );
   const [state, formAction, isPending] = useActionState(action, INITIAL_CREATE_STATE);
+  const inlineMessage = state.kind === "success" || state.kind === "invalid" ? state.message : "";
 
   return (
     <form className="create-form" action={formAction}>
@@ -191,10 +164,8 @@ function CreateItemForm({ apiClient, onCreated, authRequired }: { apiClient: Api
         <span>{authRequired ? "로그인 후 사용 가능" : isPending ? "저장 중" : "writer DB에 저장"}</span>
         <strong aria-hidden="true">→</strong>
       </button>
-      <p className={`form-message is-${state.kind}`} aria-live="polite">
-        {state.message}
-        {state.requestId ? <code> · {state.requestId}</code> : null}
-      </p>
+      <p className={`form-message is-${state.kind}`} aria-live="polite">{inlineMessage}</p>
+      {state.kind === "failed" ? <FailureNotice failure={state.failure} onLogin={onLogin} /> : null}
       <p className="form-note">POST 요청은 reader가 아니라 항상 writer를 사용합니다.</p>
     </form>
   );
@@ -208,6 +179,8 @@ export function App({ apiClient, authClient, runtimeConfig }: AppProps) {
     canCallApi ? { status: "loading", items: [] } : { status: "blocked", items: [] },
   );
 
+  const login = useCallback(() => void authClient.login(), [authClient]);
+
   const loadItems = useCallback(
     async (signal?: AbortSignal) => {
       setItemsState((current) => ({ status: "loading", items: current.items }));
@@ -215,8 +188,8 @@ export function App({ apiClient, authClient, runtimeConfig }: AppProps) {
         const items = await apiClient.listItems({ signal });
         setItemsState({ status: "ready", items });
       } catch (error) {
-        if (signal?.aborted) return;
-        setItemsState((current) => ({ status: "error", items: current.items, error: toDisplayError(error) }));
+        if (signal?.aborted || isAbortFailure(error)) return;
+        setItemsState((current) => ({ status: "error", items: current.items, failure: toRequestFailure(error) }));
       }
     },
     [apiClient],
@@ -289,19 +262,18 @@ export function App({ apiClient, authClient, runtimeConfig }: AppProps) {
             </div>
           </div>
 
-          {authRequired ? <AuthRequiredNotice snapshot={authSnapshot} /> : null}
-          {!authRequired && hasFailure ? <ErrorNotice error={itemsState.error} /> : null}
+          {authRequired ? <AccessNotice snapshot={authSnapshot} onLogin={login} /> : null}
+          {!authRequired && hasFailure ? (
+            <FailureNotice failure={itemsState.failure} onRetry={() => void loadItems()} onLogin={login} />
+          ) : null}
           {!authRequired && isLoading && itemsState.items.length === 0 ? (
-            <div className="loading-state" role="status">
-              <span aria-hidden="true" />
-              <p>Gateway에서 항목을 불러오고 있습니다.</p>
-            </div>
+            <LoadingState label="Gateway에서 항목을 불러오고 있습니다." />
           ) : !authRequired ? (
             <ItemList items={itemsState.items} />
           ) : null}
         </section>
 
-        <CreateItemForm apiClient={apiClient} onCreated={handleCreated} authRequired={authRequired} />
+        <CreateItemForm apiClient={apiClient} onCreated={handleCreated} onLogin={login} authRequired={authRequired} />
       </div>
 
       <section className="recovery-guide">

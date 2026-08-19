@@ -637,6 +637,82 @@ footer a {
   font-size: 9px;
 }
 
+.error-notice .notice-guidance {
+  color: #8d4954;
+}
+
+.error-notice.is-unauthorized,
+.error-notice.is-forbidden {
+  color: #7a4a10;
+  background: #fff8ec;
+  border-color: #eecd97;
+  border-left-color: var(--amber);
+}
+
+.error-notice.is-unauthorized .notice-guidance,
+.error-notice.is-forbidden .notice-guidance,
+.error-notice.is-validation .notice-guidance {
+  color: #8a6023;
+}
+
+.error-notice.is-validation {
+  color: #7a4a10;
+  background: #fffaf0;
+  border-color: #eed9a8;
+  border-left-color: var(--amber);
+}
+
+.notice-violations {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notice-violations li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12px;
+}
+
+.notice-violations code {
+  margin-top: 0;
+  padding: 1px 5px;
+  background: rgba(16, 24, 38, 0.06);
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.notice-actions button {
+  padding: 7px 13px;
+  color: var(--white);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.notice-actions button:hover {
+  background: var(--signal-dark);
+  border-color: var(--signal-dark);
+}
+
+.auth-required .notice-actions {
+  justify-content: center;
+}
+
 .create-form {
   position: sticky;
   top: 18px;
