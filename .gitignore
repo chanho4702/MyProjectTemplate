@@ -18,3 +18,6 @@ generated/
 !packages/api-client/src/generated/sample-service.ts
 load-tests/results/
 *.log
+playwright-report/
+test-results/
+.playwright/

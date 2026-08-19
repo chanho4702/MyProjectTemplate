@@ -29,6 +29,8 @@ export default defineConfig(() => {
     test: {
       environment: "jsdom",
       restoreMocks: true,
+      // e2e는 Playwright가 실제 브라우저에서 실행한다. Vitest가 같은 파일을 집어가지 않게 한다.
+      exclude: ["node_modules/**", "dist/**", "e2e/**"],
     },
   };
 });

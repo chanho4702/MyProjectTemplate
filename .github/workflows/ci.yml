@@ -61,6 +61,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm frontend:check
 
+  frontend-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+      - run: corepack enable
+      - run: corepack prepare pnpm@11.10.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm web:e2e:install
+      - run: pnpm web:e2e
+
   compose-contract:
     runs-on: ubuntu-latest
     steps:
